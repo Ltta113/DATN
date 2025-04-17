@@ -7,6 +7,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Publisher;
+use Cloudinary\Cloudinary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -45,10 +46,10 @@ class BookController extends Controller
         $validated = $request->validate([
             'title'         => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'isbn'          => 'required|string|unique:books,isbn',
+            // 'isbn'          => 'required|string|unique:books,isbn',
             'published_at'  => 'nullable|date',
             'publisher_id'  => 'nullable|exists:publishers,id',
-            'cover_image'   => 'nullable|image|max:2048',
+            'cover_image'   => 'nullable|image|max:2048|mimes:jpeg,png,jpg',
             'price'         => 'nullable|numeric',
             'stock'         => 'nullable|integer',
             'language'      => 'nullable|string|max:100',
@@ -59,31 +60,34 @@ class BookController extends Controller
             'category_ids.*' => 'exists:categories,id',
         ]);
 
-        // Handle cover image upload if exists
-        if ($request->hasFile('cover_image')) {
-            $imagePath = $request->file('cover_image')->store('book_covers', 'public');
-            $validated['cover_image'] = $imagePath;
-        }
-
-        // Tạo slug duy nhất
         $validated['slug'] = $this->generateUniqueSlug($validated['title']);
 
-        // Tạo sách
+        if ($request->hasFile('cover_image')) {
+            $cloudinary = new Cloudinary();
+            $uploadApi = $cloudinary->uploadApi();
+            $result = $uploadApi->upload(
+                $request->file('cover_image')->getRealPath(),
+                [
+                    'folder' => 'BookStore/Books',
+                ]
+            );
+
+            $validated['cover_image'] = $result['secure_url'];
+        }
+
         $book = Book::create($validated);
 
-        // Gắn authors
         if (!empty($validated['author_ids'])) {
             $book->book_authors()->sync($validated['author_ids']);
         }
 
-        // Gắn categories
         if (!empty($validated['category_ids'])) {
             $book->book_categories()->sync($validated['category_ids']);
         }
 
         return response()->json([
             'message' => 'Book created successfully.',
-            'book' => $book->load('book_authors', 'book_categories'),
+            'book' => new BookResource($book->load('book_authors', 'book_categories')),
         ], 201);
     }
 
