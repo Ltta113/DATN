@@ -23,6 +23,8 @@ class Book extends Model
         'published_at',
         'publisher_id',
         'cover_image',
+        'public_id',
+        'status',
         'price',
         'stock',
         'language',
@@ -88,6 +90,10 @@ class Book extends Model
      */
     public function scopeGetNewestBooks(Builder $query, int $limit = 5): Collection
     {
-        return $query->orderBy('published_at', 'desc')->take($limit)->get();
+        return $query
+            ->where('status', 'active')
+            ->orderBy('published_at', 'desc')
+            ->take($limit)
+            ->get();
     }
 }

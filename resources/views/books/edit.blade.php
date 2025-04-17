@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-lg">
-        <h1 class="text-2xl font-bold text-center mb-8">Thêm Sách Mới</h1>
+        <h1 class="text-2xl font-bold text-center mb-8">Chỉnh Sửa Sách</h1>
 
         @if ($errors->any())
             <div class="mb-6 p-4 bg-red-50 border border-red-300 rounded-lg">
@@ -14,9 +14,10 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.books.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.books.update', $book) }}" method="POST" enctype="multipart/form-data">
+            @method('PUT')
+            <input type="hidden" name="id" value="{{ $book->id }}">
             @csrf
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Tiêu đề -->
                 <div>
@@ -30,7 +31,7 @@
                                 d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                             </path>
                         </svg>
-                        <input type="text" id="title" name="title" value="{{ old('title') }}" required
+                        <input type="text" id="title" name="title" value="{{ $book->title }}" required
                             class="bg-transparent w-full py-3 px-4 text-left outline-none" placeholder="Nhập tiêu đề sách">
                     </div>
                 </div>
@@ -46,7 +47,8 @@
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
                         </svg>
-                        <input type="date" id="published_at" name="published_at" value="{{ old('published_at') }}"
+                        <input type="date" id="published_at" name="published_at"
+                            value="{{ optional($book->published_at)->format('Y-m-d') }}"
                             class="bg-transparent w-full py-3 px-4 text-left outline-none">
                     </div>
                 </div>
@@ -67,7 +69,7 @@
                             <option value="">-- Chọn nhà xuất bản --</option>
                             @foreach ($publishers as $publisher)
                                 <option value="{{ $publisher->id }}"
-                                    {{ old('publisher_id') == $publisher->id ? 'selected' : '' }}>
+                                    {{ $book->publisher_id == $publisher->id ? 'selected' : '' }}>
                                     {{ $publisher->name }}
                                 </option>
                             @endforeach
@@ -86,8 +88,9 @@
                                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                             </path>
                         </svg>
-                        <input type="number" id="price" name="price" step="0.01" value="{{ old('price') }}"
-                            class="bg-transparent w-full py-3 px-4 text-left outline-none" placeholder="Nhập giá sách">
+                        <input type="number" id="price" name="price" step="0.01" value="{{ $book->price }}"
+                            required class="bg-transparent w-full py-3 px-4 text-left outline-none"
+                            placeholder="Nhập giá sách">
                     </div>
                 </div>
 
@@ -102,7 +105,7 @@
                                 d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4">
                             </path>
                         </svg>
-                        <input type="number" id="stock" name="stock" value="{{ old('stock') }}"
+                        <input type="number" id="stock" name="stock" value="{{ $book->stock }}" required
                             class="bg-transparent w-full py-3 px-4 text-left outline-none"
                             placeholder="Nhập số lượng tồn kho">
                     </div>
@@ -119,7 +122,7 @@
                                 d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                             </path>
                         </svg>
-                        <input type="number" id="page_count" name="page_count" value="{{ old('page_count') }}"
+                        <input type="number" id="page_count" name="page_count" value="{{ $book->page_count }}"
                             class="bg-transparent w-full py-3 px-4 text-left outline-none"
                             placeholder="Nhập số trang của sách">
                     </div>
@@ -129,17 +132,37 @@
                     <label for="cover_image" class="block text-left text-gray-700 mb-2">
                         Hình ảnh bìa
                     </label>
-                    <div class="bg-gray-100 rounded-lg flex items-center">
-                        <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                            </path>
-                        </svg>
-                        <input type="file" id="cover_image" name="cover_image"
-                            class="bg-transparent w-full py-3 px-4 text-left outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100">
+
+                    <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg my-8">
+                        <label for="cover_image" class="block text-left text-gray-700 mb-2">
+                            Hình ảnh bìa
+                        </label>
+
+                        <div class="flex flex-col items-center">
+                            <!-- Image preview -->
+                            <div
+                                class="w-full h-64 mb-4 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                                <img id="imagePreview" src="{{ $book->cover_image ?? '/api/placeholder/200/300' }}"
+                                    alt="Book cover" class="h-full object-contain">
+                            </div>
+
+                            <!-- File input -->
+                            <div class="bg-gray-100 rounded-lg flex items-center">
+                                <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                <input type="file" id="cover_image" name="cover_image" accept="image/*"
+                                    class="bg-transparent w-full py-3 px-4 text-left outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
+                                    onchange="previewImage(event)">
+                            </div>
+                        </div>
                     </div>
+
                 </div>
+
             </div>
 
             <div class="mt-6">
@@ -157,7 +180,7 @@
 
                     <div id="author_tags" class="flex flex-wrap items-center">
                         @php
-                            $selectedAuthors = old('author_ids', []);
+                            $selectedAuthors = $book->book_authors->pluck('id')->toArray();
                         @endphp
 
                         @foreach ($selectedAuthors as $authorId)
@@ -220,7 +243,7 @@
 
                     <div id="category_tags" class="flex flex-wrap items-center">
                         @php
-                            $selectedCategories = old('category_ids', []);
+                            $selectedCategories = $book->book_categories->pluck('id')->toArray();
                         @endphp
 
                         @foreach ($selectedCategories as $categoryId)
@@ -280,7 +303,7 @@
                         </path>
                     </svg>
                     <textarea id="description" name="description" rows="4"
-                        class="bg-transparent w-full py-3 px-4 text-left outline-none resize-none" placeholder="Nhập mô tả về sách">{{ old('description') }}</textarea>
+                        class="bg-transparent w-full py-3 px-4 text-left outline-none resize-none" placeholder="Nhập mô tả về sách">{{ $book->description }}</textarea>
                 </div>
             </div>
 
@@ -416,6 +439,24 @@
                 });
             }
         });
+    </script>
+
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0]; // Get the selected file
+            const imagePreview = document.getElementById('imagePreview'); // Get the image element
+
+            if (file) {
+                const reader = new FileReader(); // Create a FileReader instance
+
+                // When the file is read, set the image preview's src to the file's data URL
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                };
+
+                reader.readAsDataURL(file); // Read the file as a data URL
+            }
+        }
     </script>
 
 @endsection

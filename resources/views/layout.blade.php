@@ -8,7 +8,7 @@
     @vite('resources/css/app.css')
 </head>
 
-<body class="flex">
+<body class="flex bg-gray-100">
     @include('sidebar')
 
     <main class="flex-1 p-6">

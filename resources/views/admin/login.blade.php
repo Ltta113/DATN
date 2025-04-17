@@ -20,12 +20,6 @@
         </div>
 
         <div class="w-full lg:w-1/2 p-8">
-            <div class="text-right">
-                <a href="{{ url('/') }}" class="text-gray-500 hover:bg-gray-100 p-2 rounded-full">
-                    &times;
-                </a>
-            </div>
-
             <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Đăng nhập tài khoản</h2>
 
             @if (session('error'))
