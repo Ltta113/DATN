@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\BookResource;
+use App\Models\Author;
 use App\Models\Book;
+use App\Models\Category;
+use App\Models\Publisher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 
 class BookController extends Controller
 {
@@ -27,18 +30,78 @@ class BookController extends Controller
      */
     public function create()
     {
-        //
+        $authors = Author::all();
+        $categories = Category::all();
+        $publishers = Publisher::all();
+
+        return view('books.create', compact('authors', 'categories', 'publishers'));
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * Store a newly created book in storage.
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'title'         => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'isbn'          => 'required|string|unique:books,isbn',
+            'published_at'  => 'nullable|date',
+            'publisher_id'  => 'nullable|exists:publishers,id',
+            'cover_image'   => 'nullable|image|max:2048',
+            'price'         => 'nullable|numeric',
+            'stock'         => 'nullable|integer',
+            'language'      => 'nullable|string|max:100',
+            'page_count'    => 'nullable|integer',
+            'author_ids'    => 'nullable|array',
+            'author_ids.*'  => 'exists:authors,id',
+            'category_ids'  => 'nullable|array',
+            'category_ids.*' => 'exists:categories,id',
+        ]);
+
+        // Handle cover image upload if exists
+        if ($request->hasFile('cover_image')) {
+            $imagePath = $request->file('cover_image')->store('book_covers', 'public');
+            $validated['cover_image'] = $imagePath;
+        }
+
+        // Tạo slug duy nhất
+        $validated['slug'] = $this->generateUniqueSlug($validated['title']);
+
+        // Tạo sách
+        $book = Book::create($validated);
+
+        // Gắn authors
+        if (!empty($validated['author_ids'])) {
+            $book->book_authors()->sync($validated['author_ids']);
+        }
+
+        // Gắn categories
+        if (!empty($validated['category_ids'])) {
+            $book->book_categories()->sync($validated['category_ids']);
+        }
+
+        return response()->json([
+            'message' => 'Book created successfully.',
+            'book' => $book->load('book_authors', 'book_categories'),
+        ], 201);
+    }
+
+    /**
+     * Generate a unique slug from a title.
+     */
+    private function generateUniqueSlug(string $title): string
+    {
+        $slug = Str::slug($title);
+        $originalSlug = $slug;
+        $i = 1;
+
+        while (Book::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     /**
