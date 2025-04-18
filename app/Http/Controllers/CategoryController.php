@@ -30,7 +30,8 @@ class CategoryController extends Controller
 
         $categories = $query
             ->orderBy('book_categories_count', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->appends($request->only(['search']));
 
         return view('categories.index', compact('categories'));
     }

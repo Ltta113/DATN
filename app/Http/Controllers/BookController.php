@@ -48,7 +48,8 @@ class BookController extends Controller
 
         $query->orderBy($sortBy, $sortOrder);
 
-        $books = $query->paginate(10);
+        $books = $query->paginate(10)
+            ->appends($request->only(['search', 'category', 'publisher', 'status', 'sort_by', 'sort_order']));
 
         $categories = Category::orderBy('name')->get();
         $publishers = Publisher::orderBy('name')->get();

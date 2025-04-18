@@ -127,14 +127,23 @@
         </div>
 
         <div class="mt-6">
-            {{ $publishers->links() }}
+            {{ $publishers->links('pagination::tailwind') }}
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('filter_button').addEventListener('click', function() {
-                const searchQuery = document.getElementById('search').value;
+            const searchInput = document.getElementById('search');
+            const searchButton = document.getElementById('filter_button');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchParam = urlParams.get('search');
+            if (searchParam) {
+                searchInput.value = searchParam;
+            }
+
+            searchButton.addEventListener('click', function() {
+                const searchQuery = searchInput.value;
                 let url = '{{ route('admin.publishers.index') }}?';
 
                 if (searchQuery) {
@@ -144,9 +153,9 @@
                 window.location.href = url;
             });
 
-            document.getElementById('search').addEventListener('keyup', function(event) {
+            searchInput.addEventListener('keyup', function(event) {
                 if (event.key === 'Enter') {
-                    document.getElementById('filter_button').click();
+                    searchButton.click();
                 }
             });
         });

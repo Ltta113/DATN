@@ -22,7 +22,8 @@ class PublisherController extends Controller
 
         $publishers = $query
             ->orderBy('books_count', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->appends($request->only(['search']));
 
         return view('publishers.index', compact('publishers'));
     }
@@ -60,8 +61,8 @@ class PublisherController extends Controller
             );
 
             $validated['logo'] = $result['secure_url'];
+            $validated['public_id'] = $result['public_id'];
         }
-        $validated['public_id'] = $result['public_id'];
         $validated['slug'] = $this->generateUniqueSlug($validated['name']);
 
         Publisher::create($validated);
@@ -132,6 +133,7 @@ class PublisherController extends Controller
             );
 
             $validated['logo'] = $result['secure_url'];
+            $validated['public_id'] = $result['public_id'];
         }
 
         $publisher->update($validated);

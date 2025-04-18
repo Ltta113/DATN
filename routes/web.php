@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\PublisherController;
@@ -49,6 +50,16 @@ Route::prefix('admin')->group(function () {
             Route::get('/{publisher}/edit', [PublisherController::class, 'edit'])->name('admin.publishers.edit');
             Route::put('/{publisher}', [PublisherController::class, 'update'])->name('admin.publishers.update');
             Route::delete('/{publisher}', [PublisherController::class, 'destroy'])->name('admin.publishers.destroy');
+        });
+
+        Route::prefix('authors')->group(function () {
+            Route::get('/', [AuthorController::class, 'index'])->name('admin.authors.index');
+            Route::get('/create', [AuthorController::class, 'create'])->name('admin.authors.create');
+            Route::get('/{author}', [AuthorController::class, 'show'])->name('admin.authors.show');
+            Route::post('/', [AuthorController::class, 'store'])->name('admin.authors.store');
+            Route::get('/{author}/edit', [AuthorController::class, 'edit'])->name('admin.authors.edit');
+            Route::put('/{author}', [AuthorController::class, 'update'])->name('admin.authors.update');
+            Route::delete('/{author}', [AuthorController::class, 'destroy'])->name('admin.authors.destroy');
         });
     });
 });

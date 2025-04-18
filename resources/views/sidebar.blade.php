@@ -1,5 +1,5 @@
 <!-- resources/views/components/sidebar.blade.php -->
-<div class="bg-white shadow-lg p-4 w-64 h-screen flex flex-col fixed">
+<div class="bg-white shadow-lg p-4 w-64 h-screen flex flex-col">
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-blue-600">SachVN</h1>
     </div>
@@ -51,7 +51,17 @@
                     <span>Danh sách nhà xuất bản</span>
                 </a>
             </li>
-
+            <li>
+                <a href="{{ route('admin.authors.index') }}"
+                    class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Danh sách tác giả</span>
+                </a>
+            </li>
             <li>
                 <a href="" class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"

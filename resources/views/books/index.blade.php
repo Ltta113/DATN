@@ -33,7 +33,10 @@
                         class="w-full bg-gray-100 py-3 px-4 rounded-lg outline-none">
                         <option value="">Tất cả thể loại</option>
                         @foreach ($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            <option value="{{ $category->id }}"
+                                {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -42,7 +45,10 @@
                         class="w-full bg-gray-100 py-3 px-4 rounded-lg outline-none">
                         <option value="">Tất cả NXB</option>
                         @foreach ($publishers as $publisher)
-                            <option value="{{ $publisher->id }}">{{ $publisher->name }}</option>
+                            <option value="{{ $publisher->id }}"
+                                {{ request('publisher') == $publisher->id ? 'selected' : '' }}>
+                                {{ $publisher->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -50,10 +56,11 @@
                     <select id="status_filter" name="status_filter"
                         class="w-full bg-gray-100 py-3 px-4 rounded-lg outline-none">
                         <option value="">Tất cả trạng thái</option>
-                        <option value="active">Đang hoạt động</option>
-                        <option value="inactive">Không hoạt động</option>
-                        <option value="sold_out">Hết hàng</option>
-                        <option value="deleted">Đã xóa</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Đang hoạt động</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Không hoạt động
+                        </option>
+                        <option value="sold_out" {{ request('status') == 'sold_out' ? 'selected' : '' }}>Hết hàng</option>
+                        <option value="deleted" {{ request('status') == 'deleted' ? 'selected' : '' }}>Đã xóa</option>
                     </select>
                 </div>
                 <button id="filter_button"
@@ -235,7 +242,28 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Tìm kiếm và lọc sách
+                const urlParams = new URLSearchParams(window.location.search);
+                const searchParam = urlParams.get('search');
+                const categoryParam = urlParams.get('category');
+                const publisherParam = urlParams.get('publisher');
+                const statusParam = urlParams.get('status');
+
+                if (searchParam) {
+                    document.getElementById('search').value = searchParam;
+                }
+
+                if (categoryParam) {
+                    document.getElementById('category_filter').value = categoryParam;
+                }
+
+                if (publisherParam) {
+                    document.getElementById('publisher_filter').value = publisherParam;
+                }
+
+                if (statusParam) {
+                    document.getElementById('status_filter').value = statusParam;
+                }
+
                 document.getElementById('filter_button').addEventListener('click', function() {
                     const searchQuery = document.getElementById('search').value;
                     const categoryId = document.getElementById('category_filter').value;
@@ -243,24 +271,25 @@
                     const statusFilter = document.getElementById('status_filter').value;
 
                     let url = '{{ route('admin.books.index') }}?';
+                    let params = [];
 
                     if (searchQuery) {
-                        url += `search=${encodeURIComponent(searchQuery)}&`;
+                        params.push(`search=${encodeURIComponent(searchQuery)}`);
                     }
 
                     if (categoryId) {
-                        url += `category=${categoryId}&`;
+                        params.push(`category=${categoryId}`);
                     }
 
                     if (publisherId) {
-                        url += `publisher=${publisherId}`;
+                        params.push(`publisher=${publisherId}`);
                     }
 
                     if (statusFilter) {
-                        url += `status=${statusFilter}`;
+                        params.push(`status=${statusFilter}`);
                     }
 
-                    window.location.href = url;
+                    window.location.href = url + params.join('&');
                 });
 
                 document.getElementById('search').addEventListener('keyup', function(event) {

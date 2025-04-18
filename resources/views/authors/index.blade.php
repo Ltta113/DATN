@@ -10,17 +10,16 @@
             <span class="font-medium">{{ session('success') }}</span>
         </div>
     @endif
+
     <div class="max-w-7xl mx-auto p-6 bg-white shadow-md rounded-lg">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-bold">Quản Lý Thể Loại</h1>
-            <a href="{{ route('admin.categories.create') }}"
+            <h1 class="text-2xl font-bold">Quản Lý Tác Giả</h1>
+            <a href="{{ route('admin.authors.create') }}"
                 class="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg transition duration-200 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6">
-                    </path>
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Thêm Thể Loại Mới
+                Thêm Tác Giả Mới
             </a>
         </div>
 
@@ -28,14 +27,13 @@
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
                     <div class="bg-gray-100 rounded-lg flex items-center">
-                        <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
+                        <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input type="text" id="search" name="search"
                             class="bg-transparent w-full py-3 px-4 text-left outline-none"
-                            placeholder="Tìm kiếm thể loại...">
+                            placeholder="Tìm kiếm tác giả...">
                     </div>
                 </div>
                 <button id="filter_button"
@@ -45,56 +43,47 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="mb-6 p-4 bg-green-50 border border-green-300 text-green-700 rounded-lg">
-                {{ session('success') }}
-            </div>
-        @endif
-
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tên Thể Loại
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ảnh</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiểu sử
                         </th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Slug
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày sinh
                         </th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Mô Tả
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số sách
                         </th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Số Lượng Sách
-                        </th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Thao Tác
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác
                         </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    @forelse ($categories as $category)
+                    @forelse ($authors as $author)
                         <tr class="hover:bg-gray-50 cursor-pointer"
-                            onclick="window.location='{{ route('admin.categories.show', $category->id) }}'">
+                            onclick="window.location='{{ route('admin.authors.show', $author->id) }}'">
                             <td class="py-3 px-4">
-                                <div class="font-medium text-gray-900">{{ $category->name }}</div>
+                                @if ($author->photo)
+                                    <img src="{{ $author->photo }}" alt="Ảnh tác giả"
+                                        class="w-10 h-10 rounded-full object-cover">
+                                @else
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white">
+                                        ?</div>
+                                @endif
                             </td>
-                            <td class="py-3 px-4">
-                                <div class="text-sm text-gray-600">{{ $category->slug }}</div>
+                            <td class="py-3 px-4 font-medium text-gray-900">{{ $author->name }}</td>
+                            <td class="py-3 px-4 text-sm text-gray-600" style="max-width: 300px;">
+                                {{ Str::limit($author->biography, 100) }}
                             </td>
-                            <td class="py-3 px-4">
-                                <div class="text-sm text-gray-600" style="overflow-wrap: break-word; max-width: 300px;">
-                                    {{ Str::limit($category->description, 100) }}
-                                </div>
-                            </td>
-                            <td class="py-3 px-4">
-                                <div class="text-sm text-gray-600">
-                                    <span class="font-medium">{{ $category->book_categories_count }}</span> sách
-                                </div>
+                            <td class="py-3 px-4 text-sm text-gray-600">{{ $author->birth_date }}</td>
+                            <td class="py-3 px-4 text-sm text-gray-600">
+                                <span class="font-medium">{{ $author->book_authors_count }}</span> sách
                             </td>
                             <td class="py-3 px-4 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
-                                    <a href="{{ route('admin.categories.edit', $category->id) }}"
+                                    <a href="{{ route('admin.authors.edit', $author->id) }}"
                                         class="text-blue-600 hover:text-blue-900" title="Sửa">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -103,7 +92,7 @@
                                             </path>
                                         </svg>
                                     </a>
-                                    <a href="{{ route('admin.categories.show', $category->id) }}"
+                                    <a href="{{ route('admin.authors.show', $author->id) }}"
                                         class="text-gray-600 hover:text-gray-900" title="Xem chi tiết">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -119,17 +108,16 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-6 text-center text-gray-500">
+                            <td colspan="6" class="py-6 text-center text-gray-500">
                                 <div class="flex flex-col items-center justify-center">
                                     <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z">
-                                        </path>
+                                            d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                     </svg>
-                                    <p>Không tìm thấy thể loại nào</p>
-                                    <a href="{{ route('admin.categories.create') }}"
-                                        class="mt-3 text-blue-600 hover:underline">Thêm thể loại mới ngay</a>
+                                    <p>Không tìm thấy tác giả nào</p>
+                                    <a href="{{ route('admin.authors.create') }}"
+                                        class="mt-3 text-blue-600 hover:underline">Thêm tác giả mới ngay</a>
                                 </div>
                             </td>
                         </tr>
@@ -139,7 +127,7 @@
         </div>
 
         <div class="mt-6">
-            {{ $categories->links() }}
+            {{ $authors->links() }}
         </div>
     </div>
 
@@ -157,7 +145,7 @@
 
             searchButton.addEventListener('click', function() {
                 const searchQuery = searchInput.value;
-                let url = '{{ route('admin.categories.index') }}?';
+                let url = '{{ route('admin.authors.index') }}?';
 
                 if (searchQuery) {
                     url += `search=${encodeURIComponent(searchQuery)}`;
