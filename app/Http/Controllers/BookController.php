@@ -75,20 +75,41 @@ class BookController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title'         => 'required|string|max:255',
-            'description'   => 'nullable|string',
-            'published_at'  => 'nullable|date',
-            'publisher_id'  => 'nullable|exists:publishers,id',
-            'cover_image'   => 'nullable|image|max:2048|mimes:jpeg,png,jpg',
-            'price'         => 'nullable|numeric',
-            'stock'         => 'nullable|integer',
-            'page_count'    => 'nullable|integer',
-            'author_ids'    => 'nullable|array',
-            'author_ids.*'  => 'exists:authors,id',
-            'category_ids'  => 'nullable|array',
-            'category_ids.*' => 'exists:categories,id',
-        ]);
+        $validated = $request->validate(
+            [
+                'title'         => 'required|string|max:255',
+                'description'   => 'nullable|string',
+                'published_at'  => 'nullable|date',
+                'publisher_id'  => 'nullable|exists:publishers,id',
+                'cover_image'   => 'required|image|max:2048|mimes:jpeg,png,jpg',
+                'price'         => 'nullable|numeric',
+                'stock'         => 'nullable|integer',
+                'page_count'    => 'nullable|integer',
+                'author_ids'    => 'nullable|array',
+                'author_ids.*'  => 'exists:authors,id',
+                'category_ids'  => 'nullable|array',
+                'category_ids.*' => 'exists:categories,id',
+            ],
+            [
+                'title.required' => 'Tên sách không được để trống.',
+                'title.string' => 'Tên sách phải là một chuỗi.',
+                'title.max' => 'Tên sách không được vượt quá 255 ký tự.',
+                'description.string' => 'Mô tả phải là một chuỗi.',
+                'published_at.date' => 'Ngày xuất bản không hợp lệ.',
+                'publisher_id.exists' => 'Nhà xuất bản không tồn tại.',
+                'cover_image.required' => 'Hình ảnh bìa sách không được để trống.',
+                'cover_image.image' => 'Hình ảnh bìa sách không hợp lệ.',
+                'cover_image.max' => 'Kích thước hình ảnh bìa sách không được vượt quá 2MB.',
+                'cover_image.mimes' => 'Hình ảnh bìa sách phải có định dạng jpeg, png hoặc jpg.',
+                'price.numeric' => 'Giá sách phải là một số.',
+                'stock.integer' => 'Số lượng sách phải là một số nguyên.',
+                'page_count.integer' => 'Số trang sách phải là một số nguyên.',
+                'author_ids.array' => 'Tác giả không hợp lệ.',
+                'author_ids.*.exists' => 'Tác giả không tồn tại.',
+                'category_ids.array' => 'Thể loại không hợp lệ.',
+                'category_ids.*.exists' => 'Thể loại không tồn tại.',
+            ]
+        );
 
         $validated['slug'] = $this->generateUniqueSlug($validated['title']);
         $validated['status'] = 'inactive';
@@ -150,37 +171,6 @@ class BookController extends Controller
         $book->load(['publisher', 'book_authors', 'book_categories']);
 
         return view('books.show', compact('book'));
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param string $slug
-     *
-     * @return JsonResponse
-     */
-    public function show(string $slug): JsonResponse
-    {
-        $book = Book::with(['publisher', 'book_authors', 'book_categories'])
-            ->where('slug', $slug)
-            ->first();
-
-        if (!$book) {
-            return response()->json(
-                [
-                    'message' => 'Sách không tồn tại',
-                ],
-                404
-            );
-        }
-
-        return response()->json(
-            [
-                'message' => 'Thông tin sách',
-                'data' => new BookResource($book),
-            ],
-            200
-        );
     }
 
     /**
@@ -264,27 +254,6 @@ class BookController extends Controller
     public function destroy($id)
     {
         //
-    }
-
-    /**
-     * Get the newest books.
-     *
-     * @param int $limit
-     *
-     * @return JsonResponse
-     */
-    public function getNewestBooks($limit = 10): JsonResponse
-    {
-        $books = Book::with(['publisher', 'book_authors', 'book_categories'])->getNewestBooks($limit);
-
-        // return response()->json($books, 200);
-        return response()->json(
-            [
-                'message' => 'Danh sách sách mới nhất',
-                'data' => BookResource::collection($books),
-            ],
-            200
-        );
     }
 
     public function changeStatus(Request $request, Book $book)

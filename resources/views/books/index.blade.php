@@ -58,7 +58,7 @@
                 </div>
                 <button id="filter_button"
                     class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition duration-200">
-                    Lọc
+                    Tìm Kiếm
                 </button>
             </div>
         </div>
@@ -178,7 +178,7 @@
                                             </path>
                                         </svg>
                                     </a>
-                                    <form action="{{ route('admin.books.destroy', $book->id) }}" method="POST"
+                                    {{-- <form action="{{ route('admin.books.destroy', $book->id) }}" method="POST"
                                         class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sách này?');">
                                         @csrf
                                         @method('DELETE')
@@ -190,9 +190,9 @@
                                                 </path>
                                             </svg>
                                         </button>
-                                    </form>
+                                    </form> --}}
                                     <a href="
-                                    {{-- {{ route('admin.books.show', $book->id) }} --}}
+                                    {{ route('admin.books.show', $book->id) }}
                                      "
                                         class="text-gray-600 hover:text-gray-900">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"

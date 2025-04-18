@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Book_Author extends Model
+class BookAuthor extends Model
 {
     /** @use HasFactory<\Database\Factories\BookAuthorFactory> */
     use HasFactory;

@@ -129,16 +129,35 @@
                     <label for="cover_image" class="block text-left text-gray-700 mb-2">
                         Hình ảnh bìa
                     </label>
-                    <div class="bg-gray-100 rounded-lg flex items-center">
-                        <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
-                            </path>
-                        </svg>
-                        <input type="file" id="cover_image" name="cover_image"
-                            class="bg-transparent w-full py-3 px-4 text-left outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100">
+
+                    <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg my-8">
+                        <label for="cover_image" class="block text-left text-gray-700 mb-2">
+                            Hình ảnh bìa
+                        </label>
+
+                        <div class="flex flex-col items-center">
+                            <!-- Image preview -->
+                            <div
+                                class="w-full h-64 mb-4 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                                <img id="imagePreview" src="{{ '/api/placeholder/200/300' }}" alt="Book cover"
+                                    class="h-full object-contain">
+                            </div>
+
+                            <!-- File input -->
+                            <div class="bg-gray-100 rounded-lg flex items-center">
+                                <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                <input type="file" id="cover_image" name="cover_image" accept="image/*"
+                                    class="bg-transparent w-full py-3 px-4 text-left outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
+                                    onchange="previewImage(event)">
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
 
@@ -416,6 +435,24 @@
                 });
             }
         });
+    </script>
+
+    <script>
+        function previewImage(event) {
+            const file = event.target.files[0]; // Get the selected file
+            const imagePreview = document.getElementById('imagePreview'); // Get the image element
+
+            if (file) {
+                const reader = new FileReader(); // Create a FileReader instance
+
+                // When the file is read, set the image preview's src to the file's data URL
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                };
+
+                reader.readAsDataURL(file); // Read the file as a data URL
+            }
+        }
     </script>
 
 @endsection

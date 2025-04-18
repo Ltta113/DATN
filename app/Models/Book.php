@@ -19,15 +19,15 @@ class Book extends Model
         'title',
         'description',
         'slug',
-        'isbn',
         'published_at',
         'publisher_id',
         'cover_image',
-        'public_id',
         'status',
         'price',
         'stock',
         'language',
+        'public_id',
+        'isbn',
         'page_count',
     ];
 
