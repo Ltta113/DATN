@@ -26,10 +26,17 @@ Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callbackP
 
 Route::prefix('books')->group(function () {
     Route::get('/', [BookController::class, 'getNewestBooks'])->name('books.index');
+    Route::get('/search', [BookController::class, 'search'])->name('books.search');
     Route::get('/{slug}', [BookController::class, 'show'])->name('books.show');
 });
 
 Route::prefix('categories')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('categories.index');
     Route::get('/{slug}', [CategoryController::class, 'getBooksByCategory'])->name('categories.show');
+});
+
+Route::prefix('authors')->group(function () {
+    Route::get('/', [\App\Http\Controllers\API\AuthorController::class, 'index'])->name('authors.index');
+    Route::get('/top', [\App\Http\Controllers\API\AuthorController::class, 'getAuthorManyBooks'])->name('authors.top');
+    Route::get('/{slug}', [\App\Http\Controllers\API\AuthorController::class, 'show'])->name('authors.show');
 });

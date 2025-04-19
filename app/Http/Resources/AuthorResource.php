@@ -21,6 +21,7 @@ class AuthorResource extends JsonResource
             'slug' => $this->slug,
             'photo' => $this->photo,
             'birth_date' => $this->birth_date,
+            'book_count' => $this->book_authors()->count(),
         ];
     }
 }

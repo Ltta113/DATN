@@ -1,5 +1,5 @@
 <!-- resources/views/components/sidebar.blade.php -->
-<div class="bg-white shadow-lg p-4 w-64 h-screen flex flex-col">
+<div class="bg-white shadow-lg p-4 w-64 h-screen flex flex-col sticky top-0 left-0">
     <div class="mb-8">
         <h1 class="text-2xl font-bold text-blue-600">SachVN</h1>
     </div>
