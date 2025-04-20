@@ -19,18 +19,30 @@ class BookController extends Controller
      *
      * @return JsonResponse
      */
-    public function getNewestBooks($limit = 10): JsonResponse
+    public function getNewestBooks(): JsonResponse
     {
-        $books = Book::with(['publisher', 'book_authors', 'book_categories'])->getNewestBooks($limit);
+        $books = Book::with(['publisher', 'book_authors', 'book_categories'])
+            ->getNewestBooks()
+            ->paginate(10);
 
-        return response()->json(
-            [
-                'message' => 'Danh sách sách mới nhất',
-                'data' => BookResource::collection($books),
+        if ($books->isEmpty()) {
+            return response()->json([
+                'message' => 'Không có sách nào',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Danh sách sách mới nhất',
+            'data' => BookResource::collection($books),
+            'pagination' => [
+                'current_page' => $books->currentPage(),
+                'last_page' => $books->lastPage(),
+                'per_page' => $books->perPage(),
+                'total' => $books->total(),
             ],
-            200
-        );
+        ]);
     }
+
 
     /**
      * Display the specified resource.

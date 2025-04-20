@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -84,16 +85,13 @@ class Book extends Model
      * Scope a query to get newest books.
      *
      * @param Builder $query
-     * @param int $limit
      *
      * @return Collection
      */
-    public function scopeGetNewestBooks(Builder $query, int $limit = 5): Collection
+    public function scopeGetNewestBooks(Builder $query): EloquentBuilder
     {
         return $query
             ->where('status', 'active')
-            ->orderBy('published_at', 'desc')
-            ->take($limit)
-            ->get();
+            ->orderBy('published_at', 'desc');
     }
 }
