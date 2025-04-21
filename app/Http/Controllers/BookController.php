@@ -22,7 +22,7 @@ class BookController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Book::with(['publisher', 'book_authors', 'book_categories']);
+        $query = Book::with(['publisher', 'authors', 'categories']);
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -30,8 +30,8 @@ class BookController extends Controller
         }
 
         if ($request->has('category') && $request->category) {
-            $query->whereHas('book_categories', function ($q) use ($request) {
-                $q->where('categories.id', $request->category);
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('id', $request->category);
             });
         }
 
@@ -132,11 +132,11 @@ class BookController extends Controller
         $book = Book::create($validated);
 
         if (!empty($validated['author_ids'])) {
-            $book->book_authors()->sync($validated['author_ids']);
+            $book->authors()->sync($validated['author_ids']);
         }
 
         if (!empty($validated['category_ids'])) {
-            $book->book_categories()->sync($validated['category_ids']);
+            $book->categories()->sync($validated['category_ids']);
         }
 
         return redirect()->route('admin.books.show', $book)
@@ -169,7 +169,7 @@ class BookController extends Controller
      */
     public function showByAdmin(Book $book): View
     {
-        $book->load(['publisher', 'book_authors', 'book_categories']);
+        $book->load(['publisher', 'authors', 'categories']);
 
         return view('books.show', compact('book'));
     }
@@ -182,7 +182,7 @@ class BookController extends Controller
      */
     public function edit(Book $book)
     {
-        $book->load(['publisher', 'book_authors', 'book_categories']);
+        $book->load(['publisher', 'authors', 'categories']);
 
         $authors = Author::all();
         $categories = Category::all();
@@ -232,14 +232,19 @@ class BookController extends Controller
             $validated['public_id'] = $result['public_id'];
         }
 
+        if ($validated['stock'] <= 0) {
+            $validated['stock'] = 0;
+            $validated['status'] = 'sold_out';
+        }
+
         $book->update($validated);
 
         if (!empty($validated['author_ids'])) {
-            $book->book_authors()->sync($validated['author_ids']);
+            $book->authors()->sync($validated['author_ids']);
         }
 
         if (!empty($validated['category_ids'])) {
-            $book->book_categories()->sync($validated['category_ids']);
+            $book->categories()->sync($validated['category_ids']);
         }
 
         return redirect()->route('admin.books.show', $book)
@@ -262,6 +267,13 @@ class BookController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:inactive,active,sold_out,deleted',
         ]);
+
+        if ($validated['status'] === 'active' && $book->stock <= 0) {
+            return redirect()
+                ->back()
+                ->with('error', 'Không thể hiển thị sách khi số lượng tồn kho bằng 0.');
+        }
+
 
         $book->update($validated);
 

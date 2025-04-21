@@ -66,7 +66,7 @@ class Book extends Model
      *
      * @return BelongsToMany
      */
-    public function book_authors(): BelongsToMany
+    public function authors(): BelongsToMany
     {
         return $this->belongsToMany(Author::class, 'book_authors');
     }
@@ -76,7 +76,7 @@ class Book extends Model
      *
      * @return BelongsToMany
      */
-    public function book_categories(): BelongsToMany
+    public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'book_categories');
     }

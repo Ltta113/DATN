@@ -26,10 +26,10 @@ class CategoryController extends Controller
                 ->orWhere('description', 'like', "%{$searchTerm}%");
         }
 
-        $query->withCount('book_categories');
+        $query->withCount('books');
 
         $categories = $query
-            ->orderBy('book_categories_count', 'desc')
+            ->orderBy('books_count', 'desc')
             ->paginate(10)
             ->appends($request->only(['search']));
 
@@ -71,7 +71,8 @@ class CategoryController extends Controller
             'parent_id' => $request->input('parent_id'),
         ]);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
+        return redirect()->route('admin.categories.index')->with('success', '
+            Thêm danh mục thành công.');
     }
 
     private function generateUniqueSlug(string $title): string
@@ -96,10 +97,10 @@ class CategoryController extends Controller
      */
     public function show(Category $category): View
     {
-        $category->load('book_categories');
+        $category->load('books');
 
-        $books = $category->book_categories()
-            ->with(['book_authors', 'publisher'])
+        $books = $category->books()
+            ->with(['authors', 'publisher'])
             ->paginate(12);
 
         return view('categories.show', compact('category', 'books'));

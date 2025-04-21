@@ -4,6 +4,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\SocialAuthController;
 use App\Http\Controllers\API\BookController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,12 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('user.logout');
     Route::get('profile', [AuthController::class, 'profile'])->name('user.profile');
     Route::put('update', [UserController::class, 'update'])->name('user.update');
+
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/', [OrderController::class, 'checkOrder'])->name('orders.checkOrder');
+        Route::get('/{order}', [OrderController::class, 'getOrderDetail'])->name('orders.getOrderDetail');
+    });
 });
 
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider']);

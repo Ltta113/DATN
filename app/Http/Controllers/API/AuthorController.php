@@ -7,13 +7,16 @@ use App\Http\Resources\AuthorResource;
 use App\Http\Resources\BookResource;
 use App\Models\Author;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AuthorController extends Controller
 {
     public function getAuthorManyBooks()
     {
-        $authors = Author::withCount('book_authors')
-            ->orderBy('book_authors_count', 'desc')
+        $authors = Author::withCount(['books' => function ($query) {
+            $query->where('status', 'active');
+        }])
+            ->orderBy('books_count', 'desc')
             ->take(6)
             ->get();
 
@@ -26,8 +29,10 @@ class AuthorController extends Controller
     public function index()
     {
 
-        $authors = Author::withCount('book_authors')
-            ->orderBy('book_authors_count', 'desc')
+        $authors = Author::withCount(['books' => function ($query) {
+            $query->where('books.status', 'active');
+        }])
+            ->orderBy('books_count', 'desc')
             ->paginate(12);
 
         return response()->json([
@@ -44,7 +49,10 @@ class AuthorController extends Controller
 
     public function show($slug)
     {
-        $author = Author::withCount('book_authors')
+        $author = Author::withCount(['books' => function ($query) {
+            $query->where('books.status', 'active');
+        }])
+            ->orderBy('books_count', 'desc')
             ->where('slug', $slug)
             ->first();
 
@@ -55,8 +63,9 @@ class AuthorController extends Controller
             ], 404);
         }
 
-        $books = $author->book_authors()
-            ->with(['book_authors', 'publisher', 'book_categories'])
+        $books = $author->books()
+            ->with(['authors', 'publisher', 'books'])
+            ->where('status', 'active')
             ->orderBy('created_at', 'desc')
             ->where('status', '<>', 'deleted')
             ->paginate(12);

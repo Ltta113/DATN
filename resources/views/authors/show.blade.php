@@ -90,7 +90,7 @@
 
                             <ul class="text-sm text-gray-700 mt-3 space-y-1">
                                 <li><strong>Danh mục:</strong>
-                                    @foreach ($book->book_categories as $category)
+                                    @foreach ($book->categories as $category)
                                         {{ $category->name }}@if (!$loop->last)
                                             ,
                                         @endif

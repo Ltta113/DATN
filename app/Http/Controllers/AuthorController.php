@@ -18,8 +18,8 @@ class AuthorController extends Controller
             $query->where('name', 'like', "%{$searchTerm}%");
         }
 
-        $query->withCount('book_authors');
-        $authors = $query->orderBy('book_authors_count', 'desc')
+        $query->withCount('books');
+        $authors = $query->orderBy('books_count', 'desc')
             ->paginate(10)
             ->appends($request->only(['search']));
 
@@ -88,10 +88,10 @@ class AuthorController extends Controller
 
     public function show(Author $author)
     {
-        $author->load('book_authors');
+        $author->load('books');
 
-        $books = $author->book_authors()
-            ->with(['book_authors', 'publisher'])
+        $books = $author->books()
+            ->with(['authors', 'publisher'])
             ->paginate(12);
 
         return view('authors.show', compact('author', 'books'));

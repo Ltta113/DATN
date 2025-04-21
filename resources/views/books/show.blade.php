@@ -11,6 +11,15 @@
                 <span class="font-medium">{{ session('success') }}</span>
             </div>
         @endif
+        @if (session('error'))
+            <div
+                class="mb-6 bg-red-100 border border-red-300 text-red-800 px-6 py-4 rounded-lg shadow-md flex items-center gap-2">
+                <svg class="w-6 h-6 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+        @endif
 
         <div class="bg-white shadow-2xl rounded-2xl overflow-hidden md:flex p-10">
             <div class="md:w-1/2 bg-gray-100 h-96 md:h-auto">
@@ -30,7 +39,7 @@
                         <p><span class="font-semibold">📦 Số lượng:</span> {{ $book->stock }}</p>
                         <p><span class="font-semibold">🏢 NXB:</span> {{ $book->publisher->name }}</p>
                         <p class="sm:col-span-2"><span class="font-semibold">✍️ Tác giả:</span>
-                            @foreach ($book->book_authors as $author)
+                            @foreach ($book->authors as $author)
                                 <span>{{ $author->name }}@if (!$loop->last)
                                         ,
                                     @endif
@@ -38,7 +47,7 @@
                             @endforeach
                         </p>
                         <p class="sm:col-span-2"><span class="font-semibold">📚 Thể loại:</span>
-                            @foreach ($book->book_categories as $category)
+                            @foreach ($book->categories as $category)
                                 <span>{{ $category->name }}@if (!$loop->last)
                                         ,
                                     @endif

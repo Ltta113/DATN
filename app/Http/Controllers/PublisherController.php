@@ -89,7 +89,7 @@ class PublisherController extends Controller
         $publisher->load('books');
 
         $books = $publisher->books()
-            ->with(['book_authors', 'publisher'])
+            ->with(['authors', 'publisher'])
             ->paginate(12);
 
         return view('publishers.show', compact('publisher', 'books'));

@@ -134,7 +134,7 @@
                             </td>
                             <td class="py-3 px-4">
                                 <div class="text-sm" style="overflow-wrap: break-word; max-width: 150px;">
-                                    @foreach ($book->book_authors as $author)
+                                    @foreach ($book->authors as $author)
                                         <span
                                             class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">
                                             {{ $author->name }}

@@ -32,9 +32,9 @@ class BookAuthor extends Model
      *
      * @return BelongsToMany
      */
-    public function book(): BelongsToMany
+    public function book(): BelongsTo
     {
-        return $this->belongsToMany(Book::class);
+        return $this->belongsTo(Book::class);
     }
 
     /**

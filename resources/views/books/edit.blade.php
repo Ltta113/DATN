@@ -14,7 +14,8 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.books.update', $book) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.books.update', $book) }}" method="POST" enctype="multipart/form-data"
+            id="edit-category-form">
             @method('PUT')
             <input type="hidden" name="id" value="{{ $book->id }}">
             @csrf
@@ -180,7 +181,7 @@
 
                     <div id="author_tags" class="flex flex-wrap items-center">
                         @php
-                            $selectedAuthors = $book->book_authors->pluck('id')->toArray();
+                            $selectedAuthors = $book->authors->pluck('id')->toArray();
                         @endphp
 
                         @foreach ($selectedAuthors as $authorId)
@@ -243,7 +244,7 @@
 
                     <div id="category_tags" class="flex flex-wrap items-center">
                         @php
-                            $selectedCategories = $book->book_categories->pluck('id')->toArray();
+                            $selectedCategories = $book->categories->pluck('id')->toArray();
                         @endphp
 
                         @foreach ($selectedCategories as $categoryId)
@@ -307,14 +308,16 @@
                 </div>
             </div>
 
-            <button type="submit"
-                class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg mt-8 transition duration-200 flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                Lưu Sách
+            <button type="button" onclick="document.getElementById('modal-edit-confirm').classList.remove('hidden')"
+                class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg mt-4 hover:bg-blue-700">
+                💾 Lưu thay đổi
             </button>
+
+            <x-confirm-modal id="modal-edit-confirm" title="Xác nhận cập nhật"
+                message="Bạn có chắc muốn cập nhật thông tin sách này?
+                    Nếu bạn cập nhật số lượng tồn kho thì vui lòng cập nhật lại trạng thái của sách này.
+                "
+                confirm-text="Lưu" cancel-text="Hủy" form-id="edit-category-form" action="edit" />
         </form>
     </div>
 

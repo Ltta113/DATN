@@ -45,12 +45,6 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="mb-6 p-4 bg-green-50 border border-green-300 text-green-700 rounded-lg">
-                {{ session('success') }}
-            </div>
-        @endif
-
         <div class="overflow-x-auto">
             <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <thead class="bg-gray-50">
@@ -89,7 +83,7 @@
                             </td>
                             <td class="py-3 px-4">
                                 <div class="text-sm text-gray-600">
-                                    <span class="font-medium">{{ $category->book_categories_count }}</span> sách
+                                    <span class="font-medium">{{ $category->books_count }}</span> sách
                                 </div>
                             </td>
                             <td class="py-3 px-4 whitespace-nowrap">

@@ -101,7 +101,7 @@
 
                             <ul class="text-sm text-gray-700 mt-3 space-y-1">
                                 <li><strong>Tác giả:</strong>
-                                    @foreach ($book->book_authors as $author)
+                                    @foreach ($book->authors as $author)
                                         {{ $author->name }}@if (!$loop->last)
                                             ,
                                         @endif

@@ -79,7 +79,7 @@
                             </td>
                             <td class="py-3 px-4 text-sm text-gray-600">{{ $author->birth_date }}</td>
                             <td class="py-3 px-4 text-sm text-gray-600">
-                                <span class="font-medium">{{ $author->book_authors_count }}</span> sách
+                                <span class="font-medium">{{ $author->books_count }}</span> sách
                             </td>
                             <td class="py-3 px-4 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">

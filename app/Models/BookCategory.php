@@ -30,20 +30,20 @@ class BookCategory extends Model
     /**
      * Get the book that owns the book_category.
      *
-     * @return BelongsToMany
+     * @return BelongsTo
      */
-    public function book(): BelongsToMany
+    public function book(): BelongsTo
     {
-        return $this->belongsToMany(Book::class);
+        return $this->belongsTo(Book::class);
     }
 
     /**
      * Get the category that owns the book_category.
      *
-     * @return BelongsToMany
+     * @return BelongsTo
      */
-    public function category(): BelongsToMany
+    public function category(): BelongsTo
     {
-        return $this->belongsToMany(Category::class);
+        return $this->belongsTo(Category::class);
     }
 }

@@ -21,7 +21,7 @@ class BookController extends Controller
      */
     public function getNewestBooks(): JsonResponse
     {
-        $books = Book::with(['publisher', 'book_authors', 'book_categories'])
+        $books = Book::with(['publisher', 'authors', 'categories'])
             ->getNewestBooks()
             ->paginate(10);
 
@@ -53,8 +53,9 @@ class BookController extends Controller
      */
     public function show(string $slug): JsonResponse
     {
-        $book = Book::with(['publisher', 'book_authors', 'book_categories'])
+        $book = Book::with(['publisher', 'authors', 'categories'])
             ->where('slug', $slug)
+            ->where('status', 'active')
             ->first();
 
         if (!$book) {
@@ -89,19 +90,21 @@ class BookController extends Controller
             'category' => 'nullable|string',
         ]);
 
-        $booksQuery = Book::with(['publisher', 'book_authors', 'book_categories']);
+        $booksQuery = Book::with(['publisher', 'authors', 'categories'])
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc');
 
         if ($request->filled('name')) {
             $booksQuery->where(function ($query) use ($request) {
                 $query->where('title', 'like', '%' . $request->name . '%')
-                    ->orWhereHas('book_authors', function ($query) use ($request) {
+                    ->orWhereHas('authors', function ($query) use ($request) {
                         $query->where('name', 'like', '%' . $request->name . '%');
                     });
             });
         }
 
         if ($request->filled('category')) {
-            $booksQuery->whereHas('book_categories', function ($q) use ($request) {
+            $booksQuery->whereHas('categories', function ($q) use ($request) {
                 $q->where('slug', $request->category);
             });
         }

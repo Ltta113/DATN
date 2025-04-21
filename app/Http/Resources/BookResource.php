@@ -24,11 +24,13 @@ class BookResource extends JsonResource
             'cover_image' => $this->cover_image,
             'price' => $this->price,
             'stock' => $this->stock,
+            'sold' => $this->sold,
             'language' => $this->language,
             'page_count' => $this->page_count,
             'publisher' => new PublisherResource($this->whenLoaded('publisher')),
-            'authors' => AuthorResource::collection($this->whenLoaded('book_authors')),
-            'categories' => CategoryResource::collection($this->whenLoaded('book_categories')),
+            'authors' => AuthorResource::collection($this->whenLoaded('authors')),
+            'categories' => CategoryResource::collection($this->whenLoaded('categories')),
+            'quantity' => $this->when(isset($this->quantity), $this->quantity),
         ];
     }
 }
