@@ -16,7 +16,10 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->string('email')->nullable();
-            $table->string('payment_method')->default('cod');
+            $table->string('payment_method')->default('online');
+            $table->string('province')->nullable();
+            $table->string('city')->nullable();
+            $table->string('district')->nullable();
             $table->text('note')->nullable();
         });
     }
@@ -27,7 +30,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn(['name', 'phone', 'address', 'email', 'payment_method', 'note']);
+            $table->dropColumn(['name', 'phone', 'address', 'email', 'payment_method', 'province', 'city', 'district', 'note']);
         });
     }
 };

@@ -16,14 +16,18 @@ Route::get('/user', function (Request $request) {
 Route::post('user/register', [AuthController::class, 'register'])->name('user.register');
 Route::post('user/login', [AuthController::class, 'login'])->name('user.login');
 
+Route::post('orders/payos/webhook', [OrderController::class, 'handleWebhook'])->name('orders.handleWebhook');
+
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('user.logout');
     Route::get('profile', [AuthController::class, 'profile'])->name('user.profile');
     Route::put('update', [UserController::class, 'update'])->name('user.update');
 
     Route::prefix('orders')->group(function () {
-        Route::get('/', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/', [OrderController::class, 'getOrders'])->name('orders.index');
         Route::post('/', [OrderController::class, 'checkOrder'])->name('orders.checkOrder');
+        Route::post('/create', [OrderController::class, 'createOrder'])->name('orders.createOrder');
+        Route::post('/update-status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('/{order}', [OrderController::class, 'getOrderDetail'])->name('orders.getOrderDetail');
     });
 });

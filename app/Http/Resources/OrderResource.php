@@ -25,7 +25,8 @@ class OrderResource extends JsonResource
             'email' => $this->email,
             'payment_method' => $this->payment_method,
             'note' => $this->note,
-            'order_items' => OrderItemResource::collection($this->orderItems),
+            'order_items_count' => $this->orderItems->count(),
+            // 'order_items' => OrderItemResource::collection($this->orderItems),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

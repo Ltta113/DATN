@@ -22,6 +22,9 @@ class Order extends Model
         'email',
         'payment_method',
         'note',
+        'province',
+        'district',
+        'ward',
     ];
 
     /**

@@ -28,6 +28,9 @@ class User extends Authenticatable
         'provider',
         'provider_id',
         'avatar',
+        'province',
+        'district',
+        'ward',
     ];
 
     /**
