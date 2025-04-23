@@ -1,11 +1,12 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\BookBookmarkController;
 use App\Http\Controllers\API\SocialAuthController;
 use App\Http\Controllers\API\BookController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\OrderController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\API\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,10 +19,11 @@ Route::post('user/login', [AuthController::class, 'login'])->name('user.login');
 
 Route::post('orders/payos/webhook', [OrderController::class, 'handleWebhook'])->name('orders.handleWebhook');
 
+Route::post('/books/{book}/bookmark', [BookBookmarkController::class, 'toggleBookmark'])->middleware('auth:sanctum')->name('books.bookmark');
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('user.logout');
-    Route::get('profile', [AuthController::class, 'profile'])->name('user.profile');
-    Route::put('update', [UserController::class, 'update'])->name('user.update');
+    Route::get('profile', [UserController::class, 'getUserInfo'])->name('user.profile');
+    // Route::put('update', [UserController::class, 'update'])->name('user.update');
 
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'getOrders'])->name('orders.index');

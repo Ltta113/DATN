@@ -105,6 +105,9 @@ class OrderController extends Controller
                 'email' => 'required|email|max:255',
                 'payment_method' => 'required|string|max:50',
                 'note' => 'nullable|string|max:500',
+                'district' => 'nullable|string|max:50',
+                'province' => 'nullable|string|max:50',
+                'ward' => 'nullable|string|max:50',
                 'order_items' => 'required|array',
                 'order_items.*.book_id' => 'required|exists:books,id',
                 'order_items.*.quantity' => 'required|integer|min:1',
@@ -148,6 +151,9 @@ class OrderController extends Controller
                 'phone' => $validated['phone'],
                 'address' => $validated['address'],
                 'email' => $validated['email'],
+                'district' => $validated['district'] ?? "",
+                'province' => $validated['province'] ?? "",
+                'ward' => $validated['ward'] ?? "",
                 'payment_method' => $validated['payment_method'],
                 'note' => $validated['note'],
             ]);
@@ -169,8 +175,9 @@ class OrderController extends Controller
 
                 $book->decrement('stock', $item['quantity']);
                 $book->increment('sold', $item['quantity']);
-                if ($book->stock === 0)
+                if ($book->stock === 0) {
                     $book->update(['status' => 'sold_out']);
+                }
             }
 
             $totalAmount = 0;

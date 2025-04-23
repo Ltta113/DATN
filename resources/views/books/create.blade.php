@@ -86,8 +86,9 @@
                                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                             </path>
                         </svg>
-                        <input type="number" id="price" name="price" step="0.01" value="{{ old('price') }}"
-                            class="bg-transparent w-full py-3 px-4 text-left outline-none" placeholder="Nhập giá sách">
+                        <input type="number" id="price" name="price" min="1000" step="100"
+                            value="{{ old('price', 1000) }}" class="bg-transparent w-full py-3 px-4 text-left outline-none"
+                            placeholder="Nhập giá sách">
                     </div>
                 </div>
 
@@ -102,7 +103,7 @@
                                 d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4">
                             </path>
                         </svg>
-                        <input type="number" id="stock" name="stock" value="{{ old('stock') }}"
+                        <input type="number" id="stock" name="stock" min="0" value="{{ old('stock', 0) }}"
                             class="bg-transparent w-full py-3 px-4 text-left outline-none"
                             placeholder="Nhập số lượng tồn kho">
                     </div>
@@ -119,7 +120,8 @@
                                 d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                             </path>
                         </svg>
-                        <input type="number" id="page_count" name="page_count" value="{{ old('page_count') }}"
+                        <input type="number" id="page_count" min="0" name="page_count" default="1"
+                            value="{{ old('page_count', 0) }}"
                             class="bg-transparent w-full py-3 px-4 text-left outline-none"
                             placeholder="Nhập số trang của sách">
                     </div>
@@ -131,16 +133,14 @@
                     </label>
 
                     <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg my-8">
-                        <label for="cover_image" class="block text-left text-gray-700 mb-2">
-                            Hình ảnh bìa
-                        </label>
 
                         <div class="flex flex-col items-center">
                             <!-- Image preview -->
                             <div
                                 class="w-full h-64 mb-4 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                                <img id="imagePreview" src="{{ '/api/placeholder/200/300' }}" alt="Book cover"
-                                    class="h-full object-contain">
+                                <img id="imagePreview"
+                                    src="{{ 'https://res.cloudinary.com/dswj1rtvu/image/upload/v1745050814/BookStore/Books/no_cover_available_bjb33v.png' }}"
+                                    alt="Book cover" class="h-full object-contain">
                             </div>
 
                             <!-- File input -->

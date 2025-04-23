@@ -20,23 +20,24 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // Admin::factory(1)->create([
-        //     'username' => 'admin',
-        //     'password' => bcrypt('password'),
-        // ]);
+        Admin::factory(1)->create([
+            'username' => 'admin',
+            'password' => bcrypt('password'),
+        ]);
 
         User::factory(1)->create([
             'email' => 'test1@gmail.com',
             'password' => bcrypt('password'),
         ]);
 
-        // Category::factory(10)->create();
-        // Publisher::factory(10)->create();
-        // Author::factory(10)->create();
+        Category::factory(10)->create();
+        Publisher::factory(10)->create();
+        Author::factory(10)->create();
         // Book::factory(10)->create([
         //     'category_id' => Category::all()->random()->id,
         //     'publisher_id' => Publisher::all()->random()->id,
         //     'author_id' => Author::all()->random()->id,
+
         // ]);
     }
 }

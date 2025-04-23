@@ -57,7 +57,8 @@
                     <div class="flex flex-col items-center">
                         <div
                             class="w-full h-64 mb-4 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                            <img id="imagePreview" src="{{ $author->photo ?? '/api/placeholder/200/300' }}"
+                            <img id="imagePreview"
+                                src="{{ $author->photo ?? 'https://res.cloudinary.com/dswj1rtvu/image/upload/v1745051027/BookStore/Authors/istockphoto-1451587807-612x612_f8h3fr.jpg' }}"
                                 alt="Hình ảnh tác giả" class="h-full object-contain">
                         </div>
 

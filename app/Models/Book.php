@@ -82,6 +82,16 @@ class Book extends Model
     }
 
     /**
+     * Get bookmarks that belong to the book.
+     *
+     * @return BelongsToMany
+     */
+    public function bookmarks(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'bookmarks', 'book_id', 'user_id');
+    }
+
+    /**
      * Scope a query to get newest books.
      *
      * @param Builder $query

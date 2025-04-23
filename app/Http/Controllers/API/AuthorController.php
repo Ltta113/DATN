@@ -64,7 +64,7 @@ class AuthorController extends Controller
         }
 
         $books = $author->books()
-            ->with(['authors', 'publisher', 'books'])
+            ->with(['authors', 'publisher', 'categories'])
             ->where('status', 'active')
             ->orderBy('created_at', 'desc')
             ->where('status', '<>', 'deleted')

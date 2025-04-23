@@ -21,13 +21,14 @@ class UserResource extends JsonResource
             'phone_number' => $this->phone_number,
             'address' => $this->address,
             'birth_day' => $this->birth_day,
-            'registration_date' => $this->registration_date,
-            'last_login' => $this->last_login,
             'status' => $this->status,
             'avatar' => $this->avatar,
+            'district' => $this->district,
+            'province' => $this->province,
+            'ward' => $this->ward,
+            'bookmarks' => BookResource::collection($this->bookmarks->where('status', '<>', 'deleted')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'user_type' => $this->user_type,
         ];
     }
 }
