@@ -104,4 +104,19 @@ class Book extends Model
             ->where('status', 'active')
             ->orderBy('published_at', 'desc');
     }
+
+    public function scopeGetBestSoldBooks(Builder $query): EloquentBuilder
+    {
+        return $query
+            ->where('status', 'active')
+            ->orderBy('sold', 'desc');
+    }
+
+    public function scopeGetBestSoldBooksThisMonth(Builder $query): EloquentBuilder
+    {
+        return $query
+            ->where('status', 'active')
+            ->whereMonth('created_at', now()->month)
+            ->orderBy('sold', 'desc');
+    }
 }

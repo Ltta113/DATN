@@ -52,24 +52,7 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
-    {
-        $user = Auth::user();
 
-        $validatedData = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'phone_number' => 'nullable|string|max:15',
-            'address' => 'nullable|string|max:255',
-            'birth_day' => 'nullable|date',
-        ]);
-
-        $user->update($validatedData);
-
-        return response()->json([
-            'message' => 'Cập nhật thông tin người dùng thành công',
-            'data' => new UserResource($user),
-        ]);
-    }
 
     /**
      * Remove the specified resource from storage.

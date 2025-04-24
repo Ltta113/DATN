@@ -131,4 +131,28 @@ class BookController extends Controller
             ],
         ]);
     }
+
+    public function getListBestSoldBooks(Request $request): JsonResponse
+    {
+        $books = Book::with(['publisher', 'authors', 'categories'])
+            ->getBestSoldBooks()
+            ->paginate(10);
+
+        if ($books->isEmpty()) {
+            return response()->json([
+                'message' => 'Không có sách nào',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Danh sách sách bán chạy nhất',
+            'data' => BookResource::collection($books),
+            'pagination' => [
+                'current_page' => $books->currentPage(),
+                'last_page' => $books->lastPage(),
+                'per_page' => $books->perPage(),
+                'total' => $books->total(),
+            ],
+        ]);
+    }
 }

@@ -23,7 +23,8 @@ Route::post('/books/{book}/bookmark', [BookBookmarkController::class, 'toggleBoo
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     Route::get('logout', [AuthController::class, 'logout'])->name('user.logout');
     Route::get('profile', [UserController::class, 'getUserInfo'])->name('user.profile');
-    // Route::put('update', [UserController::class, 'update'])->name('user.update');
+    Route::put('update', [UserController::class, 'updateUserInfo'])->name('user.update');
+    Route::post('avatar', [UserController::class, 'avatarManager'])->name('user.avatar');
 
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'getOrders'])->name('orders.index');
@@ -32,6 +33,8 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
         Route::post('/update-status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('/{order}', [OrderController::class, 'getOrderDetail'])->name('orders.getOrderDetail');
     });
+
+    Route::get('/bookmarks', [BookBookmarkController::class, 'getListBookmarks'])->name('user.bookmarks');
 });
 
 Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider']);
@@ -40,6 +43,7 @@ Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callbackP
 Route::prefix('books')->group(function () {
     Route::get('/', [BookController::class, 'getNewestBooks'])->name('books.index');
     Route::get('/search', [BookController::class, 'search'])->name('books.search');
+    Route::get('/best-sold', [BookController::class, 'getListBestSoldBooks'])->name('books.best-sold');
     Route::get('/{slug}', [BookController::class, 'show'])->name('books.show');
 });
 

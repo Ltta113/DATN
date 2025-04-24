@@ -24,13 +24,14 @@ class User extends Authenticatable
         'phone_number',
         'birth_day',
         'address',
-        'last_login',
-        'provider',
-        'provider_id',
-        'avatar',
         'province',
         'district',
         'ward',
+        'avatar',
+        'last_login',
+        'provider',
+        'provider_id',
+        'public_id',
     ];
 
     /**
