@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Author extends Model
 {
@@ -46,5 +47,25 @@ class Author extends Model
     public function books(): BelongsToMany
     {
         return $this->belongsToMany(Book::class, 'book_authors');
+    }
+
+    /**
+     * Get the reviews for the author.
+     *
+     * @return MorphMany
+     */
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+
+    public function getStarRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
+
+    public function getStarRatingCountAttribute()
+    {
+        return $this->reviews()->count() ?? 0;
     }
 }

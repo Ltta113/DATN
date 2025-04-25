@@ -53,7 +53,7 @@ class BookController extends Controller
      */
     public function show(string $slug): JsonResponse
     {
-        $book = Book::with(['publisher', 'authors', 'categories'])
+        $book = Book::with(['publisher', 'authors', 'categories', 'reviews.user'])
             ->where('slug', $slug)
             ->where('status', 'active')
             ->first();

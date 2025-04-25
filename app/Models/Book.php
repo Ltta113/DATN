@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Book extends Model
 {
@@ -92,6 +93,16 @@ class Book extends Model
     }
 
     /**
+     * Get reviews for the book.
+     *
+     * @return MorphMany
+     */
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+
+    /**
      * Scope a query to get newest books.
      *
      * @param Builder $query
@@ -118,5 +129,15 @@ class Book extends Model
             ->where('status', 'active')
             ->whereMonth('created_at', now()->month)
             ->orderBy('sold', 'desc');
+    }
+
+    public function getStarRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
+
+    public function getStarRatingCountAttribute()
+    {
+        return $this->reviews()->count() ?? 0;
     }
 }

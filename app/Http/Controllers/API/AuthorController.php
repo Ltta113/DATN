@@ -49,7 +49,7 @@ class AuthorController extends Controller
 
     public function show($slug)
     {
-        $author = Author::withCount(['books' => function ($query) {
+        $author = Author::with('reviews.user')->withCount(['books' => function ($query) {
             $query->where('books.status', 'active');
         }])
             ->orderBy('books_count', 'desc')
