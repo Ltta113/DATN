@@ -137,4 +137,53 @@ class ReviewController extends Controller
             'data'    => $existingReview
         ], 200);
     }
+
+    public function destroy(Request $request)
+    {
+        $validated = $request->validate([
+            'reviewable_type' => 'required|string|in:author,book,order',
+            'reviewable_id'   => 'required|integer',
+        ], [
+            'reviewable_id.required' => 'Trường ID là bắt buộc.',
+            'reviewable_type.in' => 'Loại đối tượng đánh giá không hợp lệ.',
+        ]);
+
+        $modelMap = [
+            'author' => Author::class,
+            'book'   => Book::class,
+            'order'  => Order::class,
+        ];
+
+        $modelClass = $modelMap[$validated['reviewable_type']] ?? null;
+
+        if (!$modelClass) {
+            return response()->json([
+                'message' => 'Loại đối tượng đánh giá không hợp lệ.'
+            ], 400);
+        }
+
+        $reviewable = $modelClass::find($validated['reviewable_id']);
+
+        if (!$reviewable) {
+            return response()->json([
+                'message' => 'Đối tượng đánh giá không tồn tại.'
+            ], 404);
+        }
+
+        $existingReview = $reviewable->reviews()
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        if (!$existingReview) {
+            return response()->json([
+                'message' => 'Bạn chưa có đánh giá để xóa.'
+            ], 404);
+        }
+
+        $existingReview->delete();
+
+        return response()->json([
+            'message' => 'Đánh giá đã được xóa thành công.'
+        ], 200);
+    }
 }
