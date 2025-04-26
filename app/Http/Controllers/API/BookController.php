@@ -19,16 +19,24 @@ class BookController extends Controller
      *
      * @return JsonResponse
      */
-    public function getNewestBooks(): JsonResponse
+    public function getNewestBooks(Request $request): JsonResponse
     {
-        $books = Book::with(['publisher', 'authors', 'categories'])
-            ->getNewestBooks()
-            ->paginate(10);
+        $minPrice = $request->query('min', 0);
+        $maxPrice = $request->query('max', 2500000);
+
+        $booksQuery = Book::with(['publisher', 'authors', 'categories'])
+            ->getNewestBooks();
+
+        if ($minPrice && $maxPrice) {
+            $booksQuery->whereBetween('price', [$minPrice, $maxPrice]);
+        }
+
+        $books = $booksQuery->paginate(10);
 
         if ($books->isEmpty()) {
             return response()->json([
                 'message' => 'Không có sách nào',
-            ], 404);
+            ], 200);
         }
 
         return response()->json([
@@ -88,6 +96,8 @@ class BookController extends Controller
         $request->validate([
             'name' => 'nullable|string',
             'category' => 'nullable|string',
+            'min' => 'nullable|numeric',
+            'max' => 'nullable|numeric',
         ]);
 
         $booksQuery = Book::with(['publisher', 'authors', 'categories'])
@@ -107,6 +117,10 @@ class BookController extends Controller
             $booksQuery->whereHas('categories', function ($q) use ($request) {
                 $q->where('slug', $request->category);
             });
+        }
+
+        if ($request->filled('min') && $request->filled('max')) {
+            $booksQuery->whereBetween('price', [$request->min, $request->max]);
         }
 
         $books = $booksQuery->paginate(10);
