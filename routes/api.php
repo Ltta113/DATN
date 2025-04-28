@@ -7,6 +7,7 @@ use App\Http\Controllers\API\BookController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\API\ReviewController;
+use App\Http\Controllers\API\TransactionController;
 use App\Http\Controllers\API\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,9 @@ Route::post('orders/payos/webhook', [OrderController::class, 'handleWebhook'])->
 
 Route::post('/books/{book}/bookmark', [BookBookmarkController::class, 'toggleBookmark'])->middleware('auth:sanctum')->name('books.bookmark');
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
+    Route::prefix('transactions')->group(function () {
+        Route::post('/deposit', [TransactionController::class, 'deposit'])->name('transactions.deposit');
+    });
     Route::get('logout', [AuthController::class, 'logout'])->name('user.logout');
     Route::get('profile', [UserController::class, 'getUserInfo'])->name('user.profile');
     Route::put('update', [UserController::class, 'updateUserInfo'])->name('user.update');
@@ -32,6 +36,7 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
         Route::delete('/', [ReviewController::class, 'destroy'])->name('reviews.destroy');
         Route::put('/{review}', [ReviewController::class, 'update'])->name('reviews.update');
     });
+
 
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'getOrders'])->name('orders.index');

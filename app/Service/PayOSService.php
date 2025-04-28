@@ -2,8 +2,7 @@
 
 namespace App\Service;
 
-use Illuminate\Support\Facades\Log;
-use PayOS\PayOS;
+use App\Service\PayOSCustom;
 
 class PayOSService
 {
@@ -11,7 +10,7 @@ class PayOSService
 
     public function __construct()
     {
-        $this->payos = new PayOS(
+        $this->payos = new PayOSCustom(
             config('payos.client_id'),
             config('payos.api_key'),
             config('payos.checksum_key')
@@ -26,5 +25,10 @@ class PayOSService
     public function verifyPayment($paymentData)
     {
         return $this->payos->verifyPaymentWebhookData($paymentData);
+    }
+
+    public function confirmWebhookUrl($paymentData)
+    {
+        return $this->payos->confirmWebhook($paymentData);
     }
 }

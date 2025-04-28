@@ -304,4 +304,17 @@ class OrderController extends Controller
 
         return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công.'], 200);
     }
+
+    public function confirmWebhookUrl()
+    {
+        $payOS = new PayOSService();
+
+        $webhookUrl = env('PAYOS_WEBHOOK_URL');
+        $response = $payOS->confirmWebhookUrl($webhookUrl);
+        if ($response['status'] === 'success') {
+            return response()->json(['message' => 'Webhook URL confirmed successfully.']);
+        } else {
+            return response()->json(['message' => 'Failed to confirm webhook URL.'], 500);
+        }
+    }
 }
