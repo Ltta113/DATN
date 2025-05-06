@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'district' => $this->district,
             'province' => $this->province,
             'ward' => $this->ward,
+            'wallet' => $this->wallet->balance ?? 0,
             'bookmarks' => BookResource::collection($this->bookmarks->where('status', '<>', 'deleted')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

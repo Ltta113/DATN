@@ -30,14 +30,14 @@
         <!-- Footer -->
         <div class="p-3 mt-2 text-center space-x-4 md:block">
             <button
-                class="mb-2 md:mb-0 bg-white px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-full hover:shadow-lg hover:bg-gray-100"
+                class="mb-2 md:mb-0 bg-white cursor-pointer px-5 py-2 text-sm shadow-sm font-medium tracking-wider border text-gray-600 rounded-full hover:shadow-lg hover:bg-gray-100"
                 onclick="hideModal('{{ $id }}'); return false;">
                 {{ $cancelText }}
             </button>
 
             <!-- Thay đổi màu sắc tùy vào action -->
             <button onclick="event.preventDefault(); document.getElementById('{{ $formId }}').submit();"
-                class="mb-2 md:mb-0
+                class="mb-2 md:mb-0 cursor-pointer
     @if ($action == 'delete') bg-red-500 border border-red-500 hover:bg-red-600
     @elseif($action == 'edit') bg-yellow-500 border border-yellow-500 hover:bg-yellow-600 @endif
     px-5 py-2 text-sm shadow-sm font-medium tracking-wider text-white rounded-full hover:shadow-lg">

@@ -15,20 +15,41 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'api/auth/{provider}/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'api/auth/{provider}/*', '*'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => [
+        'GET',
+        'POST',
+        'PUT',
+        'DELETE',
+        '*'
+    ],
 
     'allowed_origins' => [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
+        'https://bookstore-ltta113-ltta113s-projects.vercel.app'
     ],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
-
-    'exposed_headers' => [],
+    'allowed_headers' => [
+        'Accept',
+        'Authorization',
+        'Content-Type',
+        'Cookie',
+        'DNT',
+        'Origin',
+        'User-Agent',
+        'X-Requested-With',
+    ],
+    'exposed_headers' => [
+        'Accept',
+        'Authorization',
+        'Origin',
+        'Content-Type',
+        'X-Requested-With',
+    ],
 
     'max_age' => 0,
 

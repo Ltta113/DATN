@@ -103,6 +103,16 @@ class Book extends Model
     }
 
     /**
+     * Get the book discounts that belong to the book.
+     *
+     * @return BelongsToMany
+     */
+    public function discount()
+    {
+        return $this->belongsTo(Discount::class);
+    }
+
+    /**
      * Scope a query to get newest books.
      *
      * @param Builder $query
@@ -139,5 +149,21 @@ class Book extends Model
     public function getStarRatingCountAttribute()
     {
         return $this->reviews()->count() ?? 0;
+    }
+
+    public function getFinalPriceAttribute()
+    {
+        $price = $this->price;
+        $discount = $this->discount;
+
+        if ($discount && $discount->isActive()) {
+            if ($discount->type === 'percent') {
+                return round($price * (1 - $discount->value / 100));
+            } elseif ($discount->type === 'amount') {
+                return max(0, $price - $discount->value);
+            }
+        }
+
+        return $price;
     }
 }

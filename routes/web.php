@@ -4,7 +4,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PublisherController;
+use App\Http\Controllers\UserController;
 use App\Http\Middleware\AdminAuth;
 use Illuminate\Support\Facades\Route;
 
@@ -25,11 +28,18 @@ Route::prefix('admin')->group(function () {
             Route::get('/', [BookController::class, 'index'])->name('admin.books.index');
             Route::get('/create', [BookController::class, 'create'])->name('admin.books.create');
             Route::post('/', [BookController::class, 'store'])->name('admin.books.store');
+            Route::post('/{book}/apply-discount', [BookController::class, 'applyDiscount'])->name('admin.books.apply-discount');
+            Route::post('/{book}/remove-discount', [BookController::class, 'removeDiscount'])->name('admin.books.remove-discount');
             Route::post('/{book}/change-status', [BookController::class, 'changeStatus'])->name('admin.books.change-status');
             Route::get('/{book}/edit', [BookController::class, 'edit'])->name('admin.books.edit');
             Route::put('/{book}', [BookController::class, 'update'])->name('admin.books.update');
             Route::delete('/{book}', [BookController::class, 'destroy'])->name('admin.books.destroy');
             Route::get('/{book}', [BookController::class, 'showByAdmin'])->name('admin.books.show');
+        });
+
+        Route::prefix('users')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('admin.users.index');
+            Route::get('/{user}', [UserController::class, 'show'])->name('admin.users.show');
         });
 
         Route::prefix('categories')->group(function () {
@@ -40,6 +50,14 @@ Route::prefix('admin')->group(function () {
             Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
             Route::put('/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
             Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+        });
+
+        Route::prefix('orders')->group(function () {
+            Route::get('/', [OrderController::class, 'index'])->name('admin.orders.index');
+            Route::post('/{order}/ship', [OrderController::class, 'shipped'])->name('admin.orders.ship');
+            Route::post('/{order}/cancel', [OrderController::class, 'markOutOfStock'])->name('admin.orders.cancel');
+            Route::post('/{order}/refund', [OrderController::class, 'refundOrder'])->name('admin.orders.refund');
+            Route::get('/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
         });
 
         Route::prefix('publishers')->group(function () {
@@ -60,6 +78,19 @@ Route::prefix('admin')->group(function () {
             Route::get('/{author}/edit', [AuthorController::class, 'edit'])->name('admin.authors.edit');
             Route::put('/{author}', [AuthorController::class, 'update'])->name('admin.authors.update');
             Route::delete('/{author}', [AuthorController::class, 'destroy'])->name('admin.authors.destroy');
+        });
+
+        Route::prefix('discounts')->group(function () {
+            Route::get('/', [DiscountController::class, 'index'])->name('admin.discounts.index');
+            Route::get('/create', [DiscountController::class, 'create'])->name('admin.discounts.create');
+            Route::post('/', [DiscountController::class, 'store'])->name('admin.discounts.store');
+            Route::get('/{discount}', [DiscountController::class, 'show'])->name('admin.discounts.show');
+            Route::get('/{discount}/edit', [DiscountController::class, 'edit'])->name('admin.discounts.edit');
+            Route::put('/{discount}', [DiscountController::class, 'update'])->name('admin.discounts.update');
+            Route::delete('/{discount}', [DiscountController::class, 'destroy'])->name('admin.discounts.destroy');
+            Route::post('/{discount}/add-books', [DiscountController::class, 'assignToBooks'])->name('admin.discounts.add-books');
+            Route::post('/{discount}/remove-books', [DiscountController::class, 'removeFromBooks'])->name('admin.discounts.remove-books');
+            Route::get('/{discount}/books', [DiscountController::class, 'booksByDiscount'])->name('admin.discounts.books');
         });
     });
 });

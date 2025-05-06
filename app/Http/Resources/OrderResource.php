@@ -29,12 +29,13 @@ class OrderResource extends JsonResource
             'province' => $this->province,
             'district' => $this->district,
             'ward' => $this->ward,
+            'order_code' => $this->order_code,
             'star_rating' => $this->star_rating,
             'star_rating_count' => $this->star_rating_count,
-            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
-            // 'order_items' => OrderItemResource::collection($this->orderItems),
+            'order_items' => OrderItemResource::collection($this->orderItems),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
         ];
     }
 }

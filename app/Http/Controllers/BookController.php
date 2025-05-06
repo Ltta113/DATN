@@ -6,6 +6,7 @@ use App\Http\Resources\BookResource;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Category;
+use App\Models\Discount;
 use App\Models\Publisher;
 use Cloudinary\Cloudinary;
 use Illuminate\Contracts\View\View;
@@ -170,8 +171,9 @@ class BookController extends Controller
     public function showByAdmin(Book $book): View
     {
         $book->load(['publisher', 'authors', 'categories']);
+        $availableDiscounts = Discount::valid()->paginate(10);
 
-        return view('books.show', compact('book'));
+        return view('books.show', compact('book', 'availableDiscounts'));
     }
 
     /**
@@ -279,5 +281,26 @@ class BookController extends Controller
 
         return redirect()->route('admin.books.show', $book)
             ->with('success', 'Cập nhật trạng thái sách thành công');
+    }
+
+    public function applyDiscount(Request $request, Book $book)
+    {
+        $request->validate([
+            'discount_id' => 'required|exists:discounts,id',
+        ]);
+
+        // Gán discount_id mới
+        $book->discount_id = $request->discount_id;
+        $book->save();
+
+        return redirect()->back()->with('success', 'Áp dụng khuyến mãi thành công!');
+    }
+
+    public function removeDiscount(Request $request, Book $book)
+    {
+        $book->discount_id = null;
+        $book->save();
+
+        return redirect()->back()->with('success', 'Xóa khuyến mãi thành công!');
     }
 }

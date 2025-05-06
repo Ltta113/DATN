@@ -63,23 +63,35 @@
                 </a>
             </li>
             <li>
-                <a href="" class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
+                <a href="{{ route('admin.discounts.index') }}"
+                    class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
-                    <span>Ví tiền</span>
+                    <span>Chương trình khuyến mãi</span>
                 </a>
             </li>
             <li>
-                <a href="" class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
+                <a href="{{ route('admin.users.index') }}"
+                    class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <span>Thông tin cá nhân</span>
+                    <span>Danh sách người dùng</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.orders.index') }}" class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    <span>Danh sách đơn hàng</span>
                 </a>
             </li>
             <li>

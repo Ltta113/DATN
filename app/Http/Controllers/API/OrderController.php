@@ -10,8 +10,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
+use App\Models\Sale;
 use Illuminate\Support\Str;
 use App\Service\PayOSService;
+use App\Service\ZaloPayService;
 
 class OrderController extends Controller
 {
@@ -50,7 +53,7 @@ class OrderController extends Controller
                     'book_id' => $item['book_id'],
                 ];
             } else {
-                $total += $book->price * $item['quantity'];
+                $total += $book->final_price * $item['quantity'];
 
                 $orderItems[] = [
                     'id' => $this->generateShortCode(),
@@ -58,7 +61,7 @@ class OrderController extends Controller
                     'book_name' => $book->title,
                     'book_image' => $book->cover_image,
                     'quantity' => $item['quantity'],
-                    'price' => number_format($book->price, 2, '.', '')
+                    'price' => number_format($book->final_price, 2, '.', '')
                 ];
             }
         }
@@ -156,6 +159,7 @@ class OrderController extends Controller
                 'ward' => $validated['ward'] ?? "",
                 'payment_method' => $validated['payment_method'],
                 'note' => $validated['note'],
+                'order_code' => date('ymd') . '_' . rand(0, 1000000),
             ]);
 
             foreach ($validated['order_items'] as $item) {
@@ -170,26 +174,20 @@ class OrderController extends Controller
                 $order->orderItems()->create([
                     'book_id' => $book->id,
                     'quantity' => $item['quantity'],
-                    'price' => $book->price,
+                    'price' => $book->final_price,
                 ]);
-
-                $book->decrement('stock', $item['quantity']);
-                $book->increment('sold', $item['quantity']);
-                if ($book->stock === 0) {
-                    $book->update(['status' => 'sold_out']);
-                }
             }
 
             $totalAmount = 0;
             foreach ($order->orderItems as $orderItem) {
-                $totalAmount += $orderItem->book->price * $orderItem->quantity;
+                $totalAmount += $orderItem->book->final_price * $orderItem->quantity;
             }
             $order->update(['total_amount' => number_format($totalAmount, 2, '.', '')]);
 
             DB::commit();
 
-            if ($validated['payment_method'] === 'payos') {
-                $payOS = new PayOSService();
+            if ($validated['payment_method'] === 'zalopay') {
+                $zaloPay = new ZaloPayService();
 
                 $items = $order->orderItems->map(function ($item) {
                     return [
@@ -199,23 +197,18 @@ class OrderController extends Controller
                     ];
                 })->toArray();
 
-                $payOSOrder = [
-                    "orderCode" => $order->id,
-                    'amount' => (int) $order->total_amount,
-                    'description' => 'Thanh toán đơn hàng #' . $order->id,
-                    'returnUrl' => env('FRONTEND_RETURN_URL') . "/payment-success?order_id={$order->id}",
-                    'cancelUrl' => env('FRONTEND_RETURN_URL') . "/payment-cancel?order_id={$order->id}",
-                    'webhookUrl' => env('PAYOS_WEBHOOK_URL'),
-                    'items' => $items
-                ];
-
                 try {
-                    $payResponse = $payOS->createOrder($payOSOrder);
+                    $payResponse = $zaloPay->createOrder(
+                        $items,
+                        (int) $totalAmount,
+                        $request->user()->id,
+                        $order->order_code
+                    );
 
                     return response()->json([
                         'message' => 'Đặt hàng thành công',
                         'data' => new OrderResource($order),
-                        'checkoutUrl' => $payResponse['checkoutUrl']
+                        'checkoutUrl' => $payResponse['order_url']
                     ], 201);
                 } catch (\Throwable $e) {
                     return response()->json([
@@ -225,10 +218,32 @@ class OrderController extends Controller
                 }
             }
 
+            if ($validated['payment_method'] === 'wallet') {
+                $user = $request->user();
+                if ($user->wallet->balance < $totalAmount) {
+                    return response()->json([
+                        'message' => 'Số dư trong ví không đủ để thanh toán.',
+                    ], 422);
+                }
+
+                $user->wallet->decrement('balance', $totalAmount);
+                $user->transactions()->create([
+                    'description' => "Thanh toán đơn hàng #{$order->order_code}",
+                    'amount' => -$totalAmount,
+                    'status' => 'completed',
+                ]);
+
+                $order->update(['status' => 'paid']);
+
+                return response()->json([
+                    'message' => 'Đặt hàng thành công',
+                    'data' => new OrderResource($order),
+                ], 201);
+            }
+
             return response()->json([
-                'message' => 'Đặt hàng thành công',
-                'data' => new OrderResource($order),
-            ], 201);
+                'message' => 'Đặt hàng thất bại',
+            ], 500);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -239,26 +254,11 @@ class OrderController extends Controller
         }
     }
 
-    public function handleWebhook(Request $request)
+    public function callbackOrder(Request $request): JsonResponse
     {
-        $payOS = new PayOSService();
-        $payload = $request->all();
-
-        if ($payOS->verifyPayment($payload)) {
-            $orderId = $payload['orderCode'];
-            $status = $payload['status'];
-
-            $order = Order::find($orderId);
-            if ($order && $status === 'pending') {
-                $order->update(['status' => 'paid']);
-            }
-
-            return response()->json(['received' => true]);
-        }
-
-        return response()->json(['error' => 'Invalid signature'], 400);
+        $zaloPay = new ZaloPayService();
+        return $zaloPay->callbackOrder($request);
     }
-
 
     public function getOrders(Request $request): JsonResponse
     {
@@ -286,35 +286,115 @@ class OrderController extends Controller
         ]);
     }
 
-    public function updateStatus(Request $request)
+    public function cancelOrder(Order $order, Request $request): JsonResponse
     {
-        $orderCode = $request->input('orderCode');
-
-        $order = Order::find($orderCode);
-
-        if (!$order) {
+        if ($order->user_id !== $request->user()->id) {
             return response()->json([
-                'message' => '
-                Đơn hàng không tồn tại.'
-            ], 404);
+                'message' => 'Bạn không có quyền hủy đơn hàng này.',
+            ], 403);
         }
 
-        $order->status = 'paid';
-        $order->save();
+        if (
+            $order->status !== 'pending' &&
+            !($order->status === 'paid' && $order->payment_method !== 'cod')
+        ) {
+            return response()->json([
+                'message' => 'Đơn hàng không thể hủy.',
+            ], 422);
+        }
 
-        return response()->json(['message' => 'Cập nhật trạng thái đơn hàng thành công.'], 200);
+        DB::beginTransaction();
+        try {
+            if ($order->status === 'paid') {
+                $request->user()->wallet->increment('balance', $order->total_amount);
+                $request->user()->transactions()->create([
+                    'description' => "Hủy đơn hàng #{$order->order_code}",
+                    'amount' => $order->total_amount,
+                    'status' => 'completed',
+                ]);
+            }
+            $order->update(['status' => 'canceled']);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Hủy đơn hàng thất bại',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Hủy đơn hàng thành công',
+            'data' => new OrderResource($order),
+        ]);
     }
 
-    public function confirmWebhookUrl()
+    public function receivedOrder(Order $order, Request $request): JsonResponse
     {
-        $payOS = new PayOSService();
-
-        $webhookUrl = env('PAYOS_WEBHOOK_URL');
-        $response = $payOS->confirmWebhookUrl($webhookUrl);
-        if ($response['status'] === 'success') {
-            return response()->json(['message' => 'Webhook URL confirmed successfully.']);
-        } else {
-            return response()->json(['message' => 'Failed to confirm webhook URL.'], 500);
+        if ($order->user_id !== $request->user()->id) {
+            return response()->json([
+                'message' => 'Bạn không có quyền xác nhận đơn hàng này.',
+            ], 403);
         }
+
+        if ($order->status !== 'shipped') {
+            return response()->json([
+                'message' => 'Đơn hàng không thể xác nhận.',
+            ], 422);
+        }
+
+        $order->update(['status' => 'received']);
+
+        return response()->json([
+            'message' => 'Xác nhận nhận đơn hàng thành công',
+            'data' => new OrderResource($order),
+        ]);
     }
+
+    public function completeOrder(Order $order, Request $request): JsonResponse
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return response()->json([
+                'message' => 'Bạn không có quyền xác nhận đơn hàng này.',
+            ], 403);
+        }
+
+        if ($order->status !== 'received') {
+            return response()->json([
+                'message' => 'Đơn hàng không thể xác nhận.',
+            ], 422);
+        }
+
+        $order->update(['status' => 'completed']);
+
+        return response()->json([
+            'message' => 'Xác nhận hoàn thành đơn hàng thành công',
+            'data' => new OrderResource($order),
+        ]);
+    }
+
+    public function needRefundOrder(Order $order, Request $request): JsonResponse
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return response()->json([
+                'message' => 'Bạn không có quyền yêu cầu hoàn tiền cho đơn hàng này.',
+            ], 403);
+        }
+
+        if ($order->status !== 'received') {
+            return response()->json([
+                'message' => 'Đơn hàng không thể yêu cầu hoàn tiền.',
+            ], 422);
+        }
+
+        $order->update(['status' => 'need_refund']);
+
+        return response()->json([
+            'message' => 'Yêu cầu hoàn tiền cho đơn hàng thành công',
+            'data' => new OrderResource($order),
+        ]);
+    }
+
 }

@@ -29,6 +29,11 @@ class BookResource extends JsonResource
             'star_rating_count' => $this->star_rating_count,
             'language' => $this->language,
             'page_count' => $this->page_count,
+            'discount' => $this->when(
+                $this->discount && $this->discount->isActive(),
+                fn() => new DiscountResource($this->discount)
+            ),
+            'final_price' => $this->final_price,
             'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
             'publisher' => new PublisherResource($this->whenLoaded('publisher')),
             'authors' => AuthorResource::collection($this->whenLoaded('authors')),

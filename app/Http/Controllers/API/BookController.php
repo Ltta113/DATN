@@ -9,6 +9,7 @@ use App\Models\Author;
 use App\Models\Book;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class BookController extends Controller
 {
@@ -67,22 +68,38 @@ class BookController extends Controller
             ->first();
 
         if (!$book) {
-            return response()->json(
-                [
-                    'message' => 'Sách không tồn tại',
-                ],
-                404
-            );
+            return response()->json([
+                'message' => 'Sách không tồn tại',
+            ], 404);
         }
 
-        return response()->json(
-            [
-                'message' => 'Thông tin sách',
-                'data' => new BookResource($book),
-            ],
-            200
-        );
+        $responseData = [
+            'message' => 'Thông tin sách',
+            'data' => new BookResource($book)
+        ];
+
+        try {
+            $response = Http::get(env('AI_URL') . "/api/recommend/book/{$book->id}?top_n=5");
+
+            if ($response->successful() && isset($response['recommendations'])) {
+                $recommendIds = collect($response['recommendations'])->pluck('id_x')->toArray();
+
+                $recommendBooks = Book::whereIn('id', $recommendIds)
+                    ->where('status', 'active')
+                    ->with(['publisher', 'authors', 'categories'])
+                    ->get();
+
+                if ($recommendBooks->isNotEmpty()) {
+                    $responseData['recommendations'] = BookResource::collection($recommendBooks);
+                }
+            }
+        } catch (\Exception $e) {
+            //
+        }
+
+        return response()->json($responseData);
     }
+
 
     /**
      * Search books by name or author name with pagination.

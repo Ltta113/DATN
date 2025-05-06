@@ -166,7 +166,35 @@
                                 @endswitch
                             </td>
                             <td class="py-3 px-4">
-                                <div class="text-sm text-gray-900">{{ number_format($book->price, 0, ',', '.') }} ₫</div>
+                                @php
+                                    $originalPrice = $book->price;
+                                    $discount = $book->discount;
+
+                                    if ($discount) {
+                                        if ($discount->percent) {
+                                            $finalPrice = $originalPrice * (1 - $discount->percent / 100);
+                                        } elseif ($discount->amount) {
+                                            $finalPrice = max(0, $originalPrice - $discount->amount);
+                                        } else {
+                                            $finalPrice = $originalPrice;
+                                        }
+                                    } else {
+                                        $finalPrice = $originalPrice;
+                                    }
+                                @endphp
+
+                                @if ($discount)
+                                    <div class="text-sm text-red-600 font-semibold">
+                                        {{ number_format($finalPrice, 0, ',', '.') }} ₫
+                                    </div>
+                                    <div class="text-xs text-gray-500 line-through">
+                                        {{ number_format($originalPrice, 0, ',', '.') }} ₫
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-900">
+                                        {{ number_format($originalPrice, 0, ',', '.') }} ₫
+                                    </div>
+                                @endif
                             </td>
                             <td class="py-3 px-4">
                                 <div
