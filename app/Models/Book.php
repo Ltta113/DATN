@@ -31,6 +31,7 @@ class Book extends Model
         'public_id',
         'isbn',
         'page_count',
+        'images',
     ];
 
     /**
@@ -165,5 +166,15 @@ class Book extends Model
         }
 
         return $price;
+    }
+
+    public function combos()
+    {
+        return $this->belongsToMany(Combo::class, 'combo_book');
+    }
+
+    public function orderItems()
+    {
+        return $this->morphMany(OrderItem::class, 'orderable');
     }
 }

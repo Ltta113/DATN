@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\ComboController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PublisherController;
@@ -91,6 +92,19 @@ Route::prefix('admin')->group(function () {
             Route::post('/{discount}/add-books', [DiscountController::class, 'assignToBooks'])->name('admin.discounts.add-books');
             Route::post('/{discount}/remove-books', [DiscountController::class, 'removeFromBooks'])->name('admin.discounts.remove-books');
             Route::get('/{discount}/books', [DiscountController::class, 'booksByDiscount'])->name('admin.discounts.books');
+        });
+
+        Route::prefix('combos')->group(function () {
+            Route::get('/', [ComboController::class, 'index'])->name('admin.combos.index');
+            Route::get('/create', [ComboController::class, 'create'])->name('admin.combos.create');
+            Route::post('/', [ComboController::class, 'store'])->name('admin.combos.store');
+            Route::get('/{combo}', [ComboController::class, 'show'])->name('admin.combos.show');
+            Route::get('/{combo}/edit', [ComboController::class, 'edit'])->name('admin.combos.edit');
+            Route::put('/{combo}', [ComboController::class, 'update'])->name('admin.combos.update');
+            Route::delete('/{combo}', [ComboController::class, 'destroy'])->name('admin.combos.destroy');
+            Route::post('/toggle-book', [ComboController::class, 'toggleBook'])->name('admin.combos.toggle-book');
+            Route::post('/{id}/restore', [ComboController::class, 'restore'])->name('admin.combos.restore');
+            Route::delete('/{id}/force-delete', [ComboController::class, 'forceDelete'])->name('admin.combos.force-delete');
         });
     });
 });

@@ -136,7 +136,6 @@
                     </label>
 
                     <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg my-8">
-
                         <div class="flex flex-col items-center">
                             <!-- Image preview -->
                             <div
@@ -160,7 +159,45 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
+                <div class="md:col-span-2">
+                    <label for="gallery_images" class="block text-left text-gray-700 mb-2">
+                        Thư viện ảnh
+                    </label>
+
+                    <div class="w-full p-6 bg-white shadow-md rounded-lg my-8">
+                        <div class="flex flex-col items-center">
+                            <!-- Gallery preview -->
+                            <div id="galleryPreview" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4">
+                                @php
+                                    $galleryImages = json_decode($book->images ?? '[]', true);
+                                @endphp
+                                @foreach($galleryImages as $image)
+                                <div class="relative group" data-image='{{ json_encode($image) }}'>
+                                    <div class="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
+                                        <img src="{{ $image['url'] }}" alt="Gallery image" class="w-full h-full object-cover">
+                                    </div>
+                                    <button type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onclick="removeGalleryImage(this)">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                @endforeach
+                            </div>
+
+                            <!-- File input -->
+                            <div class="bg-gray-100 rounded-lg flex items-center w-full">
+                                <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <input type="file" id="gallery_images" name="gallery_images[]" accept="image/*" multiple
+                                    class="bg-transparent w-full py-3 px-4 text-left outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
+                                    onchange="previewGalleryImages(event)">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -459,6 +496,68 @@
                 reader.readAsDataURL(file); // Read the file as a data URL
             }
         }
+    </script>
+
+    <script>
+        function previewGalleryImages(event) {
+            const files = event.target.files;
+            const galleryPreview = document.getElementById('galleryPreview');
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <div class="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
+                            <img src="${e.target.result}" alt="Gallery image" class="w-full h-full object-cover">
+                        </div>
+                        <button type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onclick="removeGalleryImage(this)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    `;
+                    galleryPreview.appendChild(div);
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeGalleryImage(button) {
+            const container = button.parentElement;
+            container.remove();
+        }
+
+        // Thêm hàm để lấy danh sách ảnh hiện tại trước khi submit form
+        document.getElementById('edit-category-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Lấy tất cả ảnh còn lại trong gallery
+            const galleryImages = [];
+            const imageContainers = document.querySelectorAll('#galleryPreview .group');
+
+            imageContainers.forEach(container => {
+                const imageData = container.getAttribute('data-image');
+                if (imageData) {
+                    // Nếu là ảnh cũ
+                    galleryImages.push(JSON.parse(imageData));
+                }
+            });
+
+            // Thêm input hidden chứa danh sách ảnh
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'current_gallery_images';
+            input.value = JSON.stringify(galleryImages);
+            this.appendChild(input);
+
+            // Submit form
+            this.submit();
+        });
     </script>
 
 @endsection

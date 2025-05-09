@@ -30,6 +30,19 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('admin.combos.index') }}"
+                    class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span>
+                        Danh sách combo
+                    </span>
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('admin.categories.index') }}"
                     class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
@@ -68,7 +81,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 6h16M4 12h16M4 18h16" />
+                            d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                     </svg>
                     <span>Chương trình khuyến mãi</span>
                 </a>
@@ -85,7 +98,8 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.orders.index') }}" class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
+                <a href="{{ route('admin.orders.index') }}"
+                    class="flex items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -99,8 +113,8 @@
                     @csrf
                     <button type="submit"
                         class="flex w-full items-center p-2 text-gray-700 hover:bg-blue-100 rounded-md cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>

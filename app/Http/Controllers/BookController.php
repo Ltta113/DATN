@@ -84,6 +84,9 @@ class BookController extends Controller
                 'published_at'  => 'nullable|date',
                 'publisher_id'  => 'nullable|exists:publishers,id',
                 'cover_image'   => 'required|image|max:2048|mimes:jpeg,png,jpg',
+                'gallery_images' => 'nullable|array',
+                'gallery_images.*' => 'image|max:2048|mimes:jpeg,png,jpg',
+                'gallery_images.*' => 'image|max:2048|mimes:jpeg,png,jpg',
                 'price'         => 'nullable|numeric',
                 'stock'         => 'nullable|integer',
                 'page_count'    => 'nullable|integer',
@@ -103,6 +106,10 @@ class BookController extends Controller
                 'cover_image.image' => 'Hình ảnh bìa sách không hợp lệ.',
                 'cover_image.max' => 'Kích thước hình ảnh bìa sách không được vượt quá 2MB.',
                 'cover_image.mimes' => 'Hình ảnh bìa sách phải có định dạng jpeg, png hoặc jpg.',
+                'gallery_images.array' => 'Thư viện ảnh không hợp lệ.',
+                'gallery_images.*.image' => 'Hình ảnh không hợp lệ.',
+                'gallery_images.*.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
+                'gallery_images.*.mimes' => 'Hình ảnh phải có định dạng jpeg, png hoặc jpg.',
                 'price.numeric' => 'Giá sách phải là một số.',
                 'stock.integer' => 'Số lượng sách phải là một số nguyên.',
                 'page_count.integer' => 'Số trang sách phải là một số nguyên.',
@@ -116,9 +123,11 @@ class BookController extends Controller
         $validated['slug'] = $this->generateUniqueSlug($validated['title']);
         $validated['status'] = 'inactive';
 
+        $cloudinary = new Cloudinary();
+        $uploadApi = $cloudinary->uploadApi();
+
+        // Upload ảnh bìa
         if ($request->hasFile('cover_image')) {
-            $cloudinary = new Cloudinary();
-            $uploadApi = $cloudinary->uploadApi();
             $result = $uploadApi->upload(
                 $request->file('cover_image')->getRealPath(),
                 [
@@ -129,6 +138,25 @@ class BookController extends Controller
             $validated['cover_image'] = $result['secure_url'];
             $validated['public_id'] = $result['public_id'];
         }
+
+        // Upload ảnh gallery
+        $galleryImages = [];
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $image) {
+                $result = $uploadApi->upload(
+                    $image->getRealPath(),
+                    [
+                        'folder' => 'BookStore/Books/Gallery',
+                    ]
+                );
+
+                $galleryImages[] = [
+                    'url' => $result['secure_url'],
+                    'public_id' => $result['public_id']
+                ];
+            }
+        }
+        $validated['images'] = json_encode($galleryImages);
 
         $book = Book::create($validated);
 
@@ -208,6 +236,9 @@ class BookController extends Controller
             'published_at'  => 'nullable|date',
             'publisher_id'  => 'exists:publishers,id',
             'cover_image'   => 'nullable|image|max:2048|mimes:jpeg,png,jpg',
+            'gallery_images' => 'nullable|array',
+            'gallery_images.*' => 'image|max:2048|mimes:jpeg,png,jpg',
+            'current_gallery_images' => 'nullable|string',
             'price'         => 'nullable|numeric',
             'stock'         => 'nullable|integer',
             'page_count'    => 'nullable|integer',
@@ -217,12 +248,14 @@ class BookController extends Controller
             'category_ids.*' => 'exists:categories,id',
         ]);
 
+        $cloudinary = new Cloudinary();
+        $uploadApi = $cloudinary->uploadApi();
+
+        // Xử lý ảnh bìa
         if ($request->hasFile('cover_image')) {
-            $cloudinary = new Cloudinary();
             if ($book->public_id) {
-                $cloudinary->uploadApi()->destroy($book->public_id);
+                $uploadApi->destroy($book->public_id);
             }
-            $uploadApi = $cloudinary->uploadApi();
             $result = $uploadApi->upload(
                 $request->file('cover_image')->getRealPath(),
                 [
@@ -233,6 +266,80 @@ class BookController extends Controller
             $validated['cover_image'] = $result['secure_url'];
             $validated['public_id'] = $result['public_id'];
         }
+
+        // Xử lý gallery images
+        $currentImages = [];
+
+        // Chỉ xóa và tải lên lại ảnh khi có thay đổi
+        if ($request->has('current_gallery_images') || $request->hasFile('gallery_images')) {
+            // Xóa tất cả ảnh cũ trên Cloudinary
+            $oldImages = json_decode($book->images ?? '[]', true);
+            foreach ($oldImages as $image) {
+                if (isset($image['public_id'])) {
+                    $uploadApi->destroy($image['public_id']);
+                }
+            }
+
+            // Tải lên lại ảnh cũ từ form
+            if ($request->has('current_gallery_images')) {
+                $oldImages = json_decode($request->current_gallery_images, true);
+                foreach ($oldImages as $image) {
+                    // Tải lên lại ảnh cũ
+                    $result = $uploadApi->upload(
+                        $image['url'],
+                        [
+                            'folder' => 'BookStore/Books/Gallery',
+                        ]
+                    );
+
+                    $currentImages[] = [
+                        'url' => $result['secure_url'],
+                        'public_id' => $result['public_id']
+                    ];
+                }
+            }
+
+            // Tải lên ảnh mới
+            if ($request->hasFile('gallery_images')) {
+                foreach ($request->file('gallery_images') as $image) {
+                    $result = $uploadApi->upload(
+                        $image->getRealPath(),
+                        [
+                            'folder' => 'BookStore/Books/Gallery',
+                        ]
+                    );
+
+                    $currentImages[] = [
+                        'url' => $result['secure_url'],
+                        'public_id' => $result['public_id']
+                    ];
+                }
+            }
+        } else {
+            // Nếu không có thay đổi gì về ảnh, giữ nguyên ảnh cũ
+            $currentImages = json_decode($book->images ?? '[]', true);
+        }
+
+        // Nếu có ảnh mới nhưng không có ảnh cũ được giữ lại, lấy ảnh cũ từ database
+        if ($request->hasFile('gallery_images') && !$request->has('current_gallery_images')) {
+            $oldImages = json_decode($book->images ?? '[]', true);
+            foreach ($oldImages as $image) {
+                // Tải lên lại ảnh cũ
+                $result = $uploadApi->upload(
+                    $image['url'],
+                    [
+                        'folder' => 'BookStore/Books/Gallery',
+                    ]
+                );
+
+                $currentImages[] = [
+                    'url' => $result['secure_url'],
+                    'public_id' => $result['public_id']
+                ];
+            }
+        }
+
+        $validated['images'] = json_encode($currentImages);
 
         if ($validated['stock'] <= 0) {
             $validated['stock'] = 0;

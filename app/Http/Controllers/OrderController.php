@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    private const UNDEFINED_PRODUCT = 'không xác định';
+
     public function index(Request $request)
     {
         $query = Order::query();
@@ -70,7 +72,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['user', 'orderItems.book']);
+        $order->load(['user', 'orderItems.orderable']);
         return view('orders.show', compact('order'));
     }
 
@@ -80,38 +82,65 @@ class OrderController extends Controller
         $isPaidOnline = $order->status === 'paid' && $order->payment_method !== 'cod';
 
         if ($isCodPending || $isPaidOnline) {
-            // Kiểm tra tồn kho
             foreach ($order->orderItems as $item) {
-                $book = $item->book;
-                if (!$book || $book->stock < $item->quantity || $book->status === 'sold_out') {
-                    return redirect()->route('admin.orders.show', [
-                        'order' => $order->id,
-                    ])->with('error_order', 'Sách "' . ($book->title ?? 'không xác định') . '" không đủ số lượng trong kho.');
+                if ($item->orderable_type === 'App\\Models\\Book') {
+                    $book = $item->orderable;
+                    if (!$book || $book->stock < $item->quantity || $book->status === 'sold_out') {
+                        return redirect()->route('admin.orders.show', [
+                            'order' => $order->id,
+                        ])->with('error_order', 'Sách "' . ($book->title ?? self::UNDEFINED_PRODUCT) . '" không đủ số lượng trong kho.');
+                    }
+                } elseif ($item->orderable_type === 'App\\Models\\Combo') {
+                    $combo = $item->orderable;
+                    if (!$combo || !$combo->is_active) {
+                        return redirect()->route('admin.orders.show', [
+                            'order' => $order->id,
+                        ])->with('error_order', 'Combo "' . ($combo->name ?? self::UNDEFINED_PRODUCT) . '" không còn khả dụng.');
+                    }
+
+                    if (!$combo->hasEnoughStock($item->quantity)) {
+                        return redirect()->route('admin.orders.show', [
+                            'order' => $order->id,
+                        ])->with('error_order', 'Combo "' . ($combo->name ?? self::UNDEFINED_PRODUCT) . '" không đủ số lượng trong kho.');
+                    }
+
+                    foreach ($combo->books as $book) {
+                        if ($book->stock < $item->quantity || $book->status === 'sold_out') {
+                            return redirect()->route('admin.orders.show', [
+                                'order' => $order->id,
+                            ])->with('error_order', 'Sách "' . $book->title . '" trong combo không đủ số lượng trong kho.');
+                        }
+                    }
                 }
             }
 
-            // Cập nhật trạng thái đơn hàng
             $order->update(['status' => 'shipped']);
 
             foreach ($order->orderItems as $item) {
-                $book = $item->book;
+                if ($item->orderable_type === 'App\\Models\\Book') {
+                    $book = $item->orderable;
+                    if ($book) {
+                        $book->increment('sold', $item->quantity);
+                        $book->decrement('stock', $item->quantity);
 
-                if ($book) {
-                    $book->increment('sold', $item->quantity);
-                    $book->decrement('stock', $item->quantity);
+                        if ($book->stock < 0) {
+                            $book->stock = 0;
+                            $book->status = 'sold_out';
+                        }
 
-                    if ($book->stock < 0) {
-                        $book->stock = 0;
-                        $book->status = 'sold_out';
+                        $book->save();
                     }
-
-                    $book->save();
+                } elseif ($item->orderable_type === 'App\\Models\\Combo') {
+                    $combo = $item->orderable;
+                    if ($combo && $combo->hasEnoughStock($item->quantity)) {
+                        $combo->updateBooksStock($item->quantity);
+                    }
                 }
             }
 
             Notification::create([
                 'user_id' => $order->user_id,
-                'order_code' => $order->id,
+                'order_code' => $order->order_code,
                 'title' => 'Đơn hàng đang được giao',
                 'message' => 'Đơn hàng #' . $order->order_code . ' của bạn đang được giao.',
             ]);
@@ -128,7 +157,7 @@ class OrderController extends Controller
 
     public function markOutOfStock(Order $order)
     {
-        $outOfStockBooks = [];
+        $outOfStockItems = [];
 
         Sale::create([
             'amount' => -$order->total_amount,
@@ -136,13 +165,20 @@ class OrderController extends Controller
         ]);
 
         foreach ($order->orderItems as $item) {
-            $book = $item->book;
-            if (!$book || $book->stock < $item->quantity || $book->status === 'sold_out') {
-                $outOfStockBooks[] = $book->title ?? 'Không xác định';
+            if ($item->orderable_type === 'App\\Models\\Book') {
+                $book = $item->orderable;
+                if (!$book || $book->stock < $item->quantity || $book->status === 'sold_out') {
+                    $outOfStockItems[] = $book->title ?? self::UNDEFINED_PRODUCT;
+                }
+            } elseif ($item->orderable_type === 'App\\Models\\Combo') {
+                $combo = $item->orderable;
+                if (!$combo || !$combo->is_active || !$combo->hasEnoughStock($item->quantity)) {
+                    $outOfStockItems[] = $combo->name ?? self::UNDEFINED_PRODUCT;
+                }
             }
         }
 
-        if (!empty($outOfStockBooks)) {
+        if (!empty($outOfStockItems)) {
             $order->update(['status' => 'out_of_stock']);
 
             Transaction::create([
@@ -156,9 +192,9 @@ class OrderController extends Controller
 
             Notification::create([
                 'user_id' => $order->user_id,
-                'order_code' => $order->iconv_mime_decode,
-                'title' => 'Thông báo sách hết hàng',
-                'message' => 'Các sách sau đã hết hàng: ' . implode(', ', $outOfStockBooks) . '. Tiền đã được hoàn lại vào ví của bạn.',
+                'order_code' => $order->order_code,
+                'title' => 'Thông báo sản phẩm hết hàng',
+                'message' => 'Các sản phẩm sau đã hết hàng: ' . implode(', ', $outOfStockItems) . '. Tiền đã được hoàn lại vào ví của bạn.',
             ]);
 
             return redirect()->route('admin.orders.show', [
@@ -179,7 +215,7 @@ class OrderController extends Controller
 
         Notification::create([
             'user_id' => $order->user_id,
-            'order_code' => $order->id,
+            'order_code' => $order->order_code,
             'title' => 'Thông báo đơn hàng bị hủy',
             'message' => 'Đơn hàng #' . $order->order_code . ' của bạn đã bị hủy.',
         ]);
@@ -200,14 +236,21 @@ class OrderController extends Controller
         $order->update(['status' => 'refunded']);
 
         $order->orderItems->each(function ($item) {
-            $book = $item->book;
-            if ($book) {
-                $book->increment('stock', $item->quantity);
-                $book->decrement('sold', $item->quantity);
-                if ($book->status === 'sold_out' && $book->stock > 0) {
-                    $book->status = 'active';
+            if ($item->orderable_type === 'App\\Models\\Book') {
+                $book = $item->orderable;
+                if ($book) {
+                    $book->increment('stock', $item->quantity);
+                    $book->decrement('sold', $item->quantity);
+                    if ($book->status === 'sold_out' && $book->stock > 0) {
+                        $book->status = 'active';
+                    }
+                    $book->save();
                 }
-                $book->save();
+            } elseif ($item->orderable_type === 'App\\Models\\Combo') {
+                $combo = $item->orderable;
+                if ($combo) {
+                    $combo->refundBooks($item->quantity);
+                }
             }
         });
 
@@ -223,7 +266,7 @@ class OrderController extends Controller
         ]);
         Notification::create([
             'user_id' => $order->user_id,
-            'order_code' => $order->id,
+            'order_code' => $order->order_code,
             'title' => 'Hoàn tiền đơn hàng',
             'message' => "Đơn hàng #{$order->order_code} của bạn đã được hoàn tiền.",
         ]);
