@@ -36,6 +36,7 @@ Route::prefix('admin')->group(function () {
             Route::put('/{book}', [BookController::class, 'update'])->name('admin.books.update');
             Route::delete('/{book}', [BookController::class, 'destroy'])->name('admin.books.destroy');
             Route::get('/{book}', [BookController::class, 'showByAdmin'])->name('admin.books.show');
+            Route::delete('/delete-image/{public_id}', [BookController::class, 'deleteImage'])->name('admin.books.delete-image')->where('public_id', '.*');
         });
 
         Route::prefix('users')->group(function () {

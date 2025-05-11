@@ -99,8 +99,10 @@
                                 </div>
                             </td>
                             <td class="py-3 px-4">
-                                @if ($combo->is_active)
+                                @if ($combo->is_active && $combo->deleted_at == null)
                                     <span class="text-green-600">Đang hoạt động</span>
+                                @elseif ($combo->deleted_at != null)
+                                    <span class="text-red-600">Đã xóa</span>
                                 @else
                                     <span class="text-gray-500">Không hoạt động</span>
                                 @endif

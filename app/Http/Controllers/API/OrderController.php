@@ -10,11 +10,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ComboResource;
+use App\Models\Combo;
 use App\Models\Notification;
 use App\Models\Sale;
 use Illuminate\Support\Str;
 use App\Service\PayOSService;
 use App\Service\ZaloPayService;
+use Illuminate\Container\Attributes\Log;
+use Illuminate\Support\Facades\Log as FacadesLog;
 
 class OrderController extends Controller
 {
@@ -28,14 +32,15 @@ class OrderController extends Controller
         $validated = $request->validate(
             [
                 'order_items' => 'required|array',
-                'order_items.*.book_id' => 'required|exists:books,id',
-                'order_items.*.quantity' => 'required|integer',
+                'order_items.*.orderable_id' => 'required|integer',
+                'order_items.*.orderable_type' => 'required|string|in:book,combo',
+                'order_items.*.quantity' => 'required|integer|min:1',
             ],
             [
                 'order_items.required' => 'Danh sách sản phẩm không được để trống.',
                 'order_items.array' => 'Danh sách sản phẩm không hợp lệ.',
-                'order_items.*.book_id.required' => 'ID sách không được để trống.',
-                'order_items.*.book_id.exists' => 'Sách không tồn tại.',
+                'order_items.*.orderable_id.required' => 'ID sản phẩm không được để trống.',
+                'order_items.*.orderable_id.exists' => 'Sản phẩm không tồn tại.',
                 'order_items.*.quantity.required' => 'Số lượng không được để trống.',
                 'order_items.*.quantity.integer' => 'Số lượng phải là số nguyên.',
             ]
@@ -46,33 +51,59 @@ class OrderController extends Controller
         $total = 0;
 
         foreach ($validated['order_items'] as $item) {
-            $book = Book::findOrFail($item['book_id']);
 
-            if ($book->stock < $item['quantity'] || $item['quantity'] <= 0) {
-                $insufficientStock[] = [
-                    'book_id' => $item['book_id'],
-                ];
+            if ($item['orderable_type'] === 'book') {
+                $book = Book::findOrFail($item['orderable_id']);
+
+                if ($book->stock < $item['quantity'] || $item['quantity'] <= 0) {
+                    $insufficientStock[] = [
+                        'book_id' => $book->id,
+                    ];
+                } else {
+                    $total += $book->final_price * $item['quantity'];
+
+                    $orderItems[] = [
+                        'id' => $this->generateShortCode(),
+                        'orderable_id' => $book->id,
+                        'orderable_type' => 'book',
+                        'quantity' => $item['quantity'],
+                        'image' => $book->cover_image,
+                        'price' => number_format($book->final_price, 2, '.', '')
+                    ];
+                }
             } else {
-                $total += $book->final_price * $item['quantity'];
+                $combo = Combo::findOrFail($item['orderable_id']);
 
-                $orderItems[] = [
-                    'id' => $this->generateShortCode(),
-                    'book_id' => $book->id,
-                    'book_name' => $book->title,
-                    'book_image' => $book->cover_image,
-                    'quantity' => $item['quantity'],
-                    'price' => number_format($book->final_price, 2, '.', '')
-                ];
+                if (!$combo->hasEnoughStock($item['quantity'])) {
+                    $insufficientStock[] = [
+                        'combo_id' => $combo->id,
+                    ];
+                } else {
+                    $total += $combo->price * $item['quantity'];
+
+                    $orderItems[] = [
+                        'id' => $this->generateShortCode(),
+                        'orderable_id' => $combo->id,
+                        'orderable_type' => 'combo',
+                        'quantity' => $item['quantity'],
+                        'image' => $combo->image,
+                        'price' => number_format($combo->price, 2, '.', '')
+                    ];
+                }
             }
         }
 
         if (!empty($insufficientStock)) {
             $bookIds = collect($insufficientStock)->pluck('book_id');
             $books = Book::whereIn('id', $bookIds)->get();
-
+            $comboIds = collect($insufficientStock)->pluck('combo_id');
+            $combos = Combo::whereIn('id', $comboIds)->get();
             return response()->json([
                 'message' => 'Một số sách không đủ số lượng tồn kho.',
-                'data' => BookResource::collection($books),
+                'data' => [
+                    'books' => BookResource::collection($books),
+                    'combos' => ComboResource::collection($combos),
+                ]
             ], 422);
         }
 
@@ -112,7 +143,8 @@ class OrderController extends Controller
                 'province' => 'nullable|string|max:50',
                 'ward' => 'nullable|string|max:50',
                 'order_items' => 'required|array',
-                'order_items.*.book_id' => 'required|exists:books,id',
+                'order_items.*.orderable_id' => 'required|integer',
+                'order_items.*.orderable_type' => 'required|string|in:book,combo',
                 'order_items.*.quantity' => 'required|integer|min:1',
             ],
             [
@@ -135,11 +167,13 @@ class OrderController extends Controller
                 'note.max' => 'Ghi chú không được vượt quá 500 ký tự.',
                 'order_items.required' => 'Danh sách sản phẩm không được để trống.',
                 'order_items.array' => 'Danh sách sản phẩm không hợp lệ.',
-                'order_items.*.book_id.required' => 'ID sách không được để trống.',
-                'order_items.*.book_id.exists' => 'Sách không tồn tại.',
+                'order_items.*.orderable_id.required' => 'ID sản phẩm không được để trống.',
+                'order_items.*.orderable_id.exists' => 'Sản phẩm không tồn tại.',
                 'order_items.*.quantity.required' => 'Số lượng không được để trống.',
                 'order_items.*.quantity.integer' => 'Số lượng phải là số nguyên.',
                 'order_items.*.quantity.min' => 'Số lượng phải lớn hơn 0.',
+                'order_items.*.orderable_type.required' => 'Loại sản phẩm không được để trống.',
+                'order_items.*.orderable_type.in' => 'Loại sản phẩm không hợp lệ.',
             ]
         );
 
@@ -163,24 +197,47 @@ class OrderController extends Controller
             ]);
 
             foreach ($validated['order_items'] as $item) {
-                $book = Book::findOrFail($item['book_id']);
+                if ($item['orderable_type'] === 'book') {
+                    $book = Book::findOrFail($item['orderable_id']);
 
-                if ($book->stock < $item['quantity']) {
-                    return response()->json([
-                        'message' => "Sách {$book->title} không đủ số lượng tồn kho.",
-                    ], 422);
+                    if ($book->stock < $item['quantity']) {
+                        return response()->json([
+                            'message' => "Sách {$book->title} không đủ số lượng tồn kho.",
+                        ], 422);
+                    }
+
+
+                    $order->orderItems()->create([
+                        'quantity' => $item['quantity'],
+                        'price' => $book->final_price,
+                        'orderable_id' => $book->id,
+                        'orderable_type' => 'App\\Models\\Book',
+                    ]);
+                } else {
+                    $combo = Combo::findOrFail($item['orderable_id']);
+
+                    if (!$combo->hasEnoughStock($item['quantity'])) {
+                        return response()->json([
+                            'message' => "Combo {$combo->name} không đủ số lượng tồn kho.",
+                        ], 422);
+                    }
+
+                    $order->orderItems()->create([
+                        'quantity' => $item['quantity'],
+                        'price' => $combo->price,
+                        'orderable_id' => $combo->id,
+                        'orderable_type' => 'App\\Models\\Combo',
+                    ]);
                 }
-
-                $order->orderItems()->create([
-                    'book_id' => $book->id,
-                    'quantity' => $item['quantity'],
-                    'price' => $book->final_price,
-                ]);
             }
 
             $totalAmount = 0;
             foreach ($order->orderItems as $orderItem) {
-                $totalAmount += $orderItem->book->final_price * $orderItem->quantity;
+                if ($orderItem->orderable_type === 'App\\Models\\Book') {
+                    $totalAmount += $orderItem->price * $orderItem->quantity;
+                } else {
+                    $totalAmount += $orderItem->price * $orderItem->quantity;
+                }
             }
             $order->update(['total_amount' => number_format($totalAmount, 2, '.', '')]);
 
@@ -191,7 +248,7 @@ class OrderController extends Controller
 
                 $items = $order->orderItems->map(function ($item) {
                     return [
-                        'name' => $item->book->title,
+                        'name' => $item->orderable_type === 'App\\Models\\Book' ? $item->book->title : $item->combo->name,
                         'quantity' => $item->quantity,
                         'price' => (int) $item->price
                     ];
@@ -396,5 +453,4 @@ class OrderController extends Controller
             'data' => new OrderResource($order),
         ]);
     }
-
 }

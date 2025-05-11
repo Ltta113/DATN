@@ -32,6 +32,11 @@ class Combo extends Model
         return $this->belongsToMany(Book::class, 'combo_book');
     }
 
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+
     public function hasEnoughStock(int $quantity = 1): bool
     {
         foreach ($this->books as $book) {
@@ -54,6 +59,7 @@ class Combo extends Model
                 $this->books()->update(['status' => 'sold_out']);
             }
         }
+        $this->increment('sold', $quantity);
     }
 
     public function refundBooks(int $quantity = 1)
@@ -77,18 +83,40 @@ class Combo extends Model
         return $this->morphMany(OrderItem::class, 'orderable');
     }
 
-    public function createSlug()
+    public static function generateSlug($name)
     {
-        $slug = Str::slug($this->name);
+        $slug = Str::slug($name);
         $originalSlug = $slug;
         $count = 1;
 
-        while (static::where('slug', $slug)->where('id', '!=', $this->id)->exists()) {
+        while (static::where('slug', $slug)->exists()) {
             $slug = $originalSlug . '-' . $count;
             $count++;
         }
 
-        $this->slug = $slug;
-        $this->save();
+        return $slug;
+    }
+
+    public function getDiscountAttribute()
+    {
+        $totalPrice = $this->books->sum('price');
+        $discountedPrice = $this->price;
+        $discountPercentage = ($totalPrice - $discountedPrice) / $totalPrice * 100;
+        return $discountPercentage;
+    }
+
+    public function getStockAttribute()
+    {
+        return $this->books->min('stock');
+    }
+
+    public function getStarRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?? 0;
+    }
+
+    public function getStarRatingCountAttribute()
+    {
+        return $this->reviews()->count() ?? 0;
     }
 }

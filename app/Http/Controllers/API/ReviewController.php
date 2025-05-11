@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Author;
 use App\Models\Book;
+use App\Models\Combo;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'reviewable_type' => 'required|string|in:author,book,order',
+            'reviewable_type' => 'required|string|in:author,book,order,combo',
             'reviewable_id'   => 'required|integer',
             'content'         => 'required|string|max:1000',
             'rating'          => 'required|integer|min:1|max:5',
@@ -32,6 +33,7 @@ class ReviewController extends Controller
             'author' => Author::class,
             'book'   => Book::class,
             'order'  => Order::class,
+            'combo'  => Combo::class,
         ];
 
         $modelClass = $modelMap[$validated['reviewable_type']] ?? null;
@@ -80,7 +82,7 @@ class ReviewController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'reviewable_type' => 'required|string|in:author,book,order',
+            'reviewable_type' => 'required|string|in:author,book,order,combo',
             'reviewable_id'   => 'required|integer',
             'content'         => 'required|string|max:1000',
             'rating'          => 'required|integer|min:1|max:5',
@@ -99,6 +101,7 @@ class ReviewController extends Controller
             'author' => Author::class,
             'book'   => Book::class,
             'order'  => Order::class,
+            'combo'  => Combo::class,
         ];
 
         $modelClass = $modelMap[$validated['reviewable_type']] ?? null;
@@ -141,7 +144,7 @@ class ReviewController extends Controller
     public function destroy(Request $request)
     {
         $validated = $request->validate([
-            'reviewable_type' => 'required|string|in:author,book,order',
+            'reviewable_type' => 'required|string|in:author,book,order,combo',
             'reviewable_id'   => 'required|integer',
         ], [
             'reviewable_id.required' => 'Trường ID là bắt buộc.',
@@ -152,6 +155,7 @@ class ReviewController extends Controller
             'author' => Author::class,
             'book'   => Book::class,
             'order'  => Order::class,
+            'combo'  => Combo::class,
         ];
 
         $modelClass = $modelMap[$validated['reviewable_type']] ?? null;

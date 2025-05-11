@@ -25,15 +25,18 @@ class OrderItemResource extends JsonResource
             'image' => $isCombo ? $orderable->image : $orderable->cover_image,
             'quantity' => $this->quantity,
             'price' => $this->price,
-            'books' => $isCombo ? $orderable->books->map(function ($book) {
+            'books' => $isCombo && $orderable->books ? $orderable->books->map(function ($book) {
                 return [
                     'id' => $book->id,
                     'title' => $book->title,
                     'price' => $book->price,
-                    'images' => [
-                        'cover' => $book->cover_image,
-                        'gallery' => $book->images ? json_decode($book->images) : [],
-                    ],
+                ];
+            }) : null,
+            'combos' => $isCombo && $orderable->combos ? $orderable->combos->map(function ($combo) {
+                return [
+                    'id' => $combo->id,
+                    'name' => $combo->name,
+                    'price' => $combo->price,
                 ];
             }) : null,
         ];

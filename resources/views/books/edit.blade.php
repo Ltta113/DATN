@@ -1,6 +1,7 @@
 @extends('layout')
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-lg">
         <h1 class="text-2xl font-bold text-center mb-8">Chỉnh Sửa Sách</h1>
 
@@ -170,21 +171,20 @@
                         <div class="flex flex-col items-center">
                             <!-- Gallery preview -->
                             <div id="galleryPreview" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4">
-                                @php
-                                    $galleryImages = json_decode($book->images ?? '[]', true);
-                                @endphp
-                                @foreach($galleryImages as $image)
-                                <div class="relative group" data-image='{{ json_encode($image) }}'>
-                                    <div class="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
-                                        <img src="{{ $image['url'] }}" alt="Gallery image" class="w-full h-full object-cover">
-                                    </div>
-                                    <button type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onclick="removeGalleryImage(this)">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                                @endforeach
+                                @if($book->images)
+                                    @foreach(json_decode($book->images) as $image)
+                                        <div class="relative group" data-image='{"url":"{{ $image->url }}","public_id":"{{ $image->public_id }}"}'>
+                                            <div class="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
+                                                <img src="{{ $image->url }}" alt="Gallery image" class="w-full h-full object-cover">
+                                            </div>
+                                            <button type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onclick="removeGalleryImage(this)">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                @endif
                             </div>
 
                             <!-- File input -->
@@ -529,34 +529,61 @@
 
         function removeGalleryImage(button) {
             const container = button.parentElement;
-            container.remove();
+            const imageData = container.getAttribute('data-image');
+
+            if (imageData) {
+                try {
+                    const image = JSON.parse(imageData);
+                    console.log('Deleting image:', image);
+
+                    // Gọi API xóa ảnh khỏi Cloudinary và database
+                    fetch(`/admin/books/delete-image/${encodeURIComponent(image.public_id)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            // Xóa ảnh khỏi giao diện ngay lập tức
+                            container.remove();
+                            // Hiển thị thông báo thành công
+                            const toast = document.createElement('div');
+                            toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                            toast.textContent = 'Xóa ảnh thành công';
+                            document.body.appendChild(toast);
+
+                            // Tự động ẩn thông báo sau 3 giây
+                            setTimeout(() => {
+                                toast.remove();
+                            }, 3000);
+                        } else {
+                            alert('Có lỗi xảy ra khi xóa ảnh: ' + (data.message || 'Không xác định'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Lỗi:', error);
+                        alert('Có lỗi xảy ra khi xóa ảnh: ' + error.message);
+                    });
+                } catch (error) {
+                    console.error('Lỗi khi parse dữ liệu ảnh:', error);
+                    alert('Lỗi khi xử lý dữ liệu ảnh: ' + error.message);
+                }
+            } else {
+                // Nếu là ảnh mới chưa upload lên Cloudinary
+                container.remove();
+            }
         }
 
-        // Thêm hàm để lấy danh sách ảnh hiện tại trước khi submit form
+        // Xóa phần xử lý current_gallery_images trong form submit vì không cần nữa
         document.getElementById('edit-category-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Lấy tất cả ảnh còn lại trong gallery
-            const galleryImages = [];
-            const imageContainers = document.querySelectorAll('#galleryPreview .group');
-
-            imageContainers.forEach(container => {
-                const imageData = container.getAttribute('data-image');
-                if (imageData) {
-                    // Nếu là ảnh cũ
-                    galleryImages.push(JSON.parse(imageData));
-                }
-            });
-
-            // Thêm input hidden chứa danh sách ảnh
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'current_gallery_images';
-            input.value = JSON.stringify(galleryImages);
-            this.appendChild(input);
-
-            // Submit form
-            this.submit();
+            // Không cần preventDefault nữa vì không cần xử lý gì thêm
         });
     </script>
 

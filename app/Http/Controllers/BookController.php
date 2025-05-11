@@ -246,6 +246,27 @@ class BookController extends Controller
             'author_ids.*'  => 'exists:authors,id',
             'category_ids'  => 'array',
             'category_ids.*' => 'exists:categories,id',
+        ], [
+            'title.required' => 'Tên sách không được để trống.',
+            'title.string' => 'Tên sách phải là một chuỗi.',
+            'title.max' => 'Tên sách không được vượt quá 255 ký tự.',
+            'description.string' => 'Mô tả phải là một chuỗi.',
+            'published_at.date' => 'Ngày xuất bản không hợp lệ.',
+            'publisher_id.exists' => 'Nhà xuất bản không tồn tại.',
+            'cover_image.image' => 'Hình ảnh bìa sách không hợp lệ.',
+            'cover_image.max' => 'Kích thước hình ảnh bìa sách không được vượt quá 2MB.',
+            'cover_image.mimes' => 'Hình ảnh bìa sách phải có định dạng jpeg, png hoặc jpg.',
+            'gallery_images.array' => 'Thư viện ảnh không hợp lệ.',
+            'gallery_images.*.image' => 'Hình ảnh không hợp lệ.',
+            'gallery_images.*.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
+            'gallery_images.*.mimes' => 'Hình ảnh phải có định dạng jpeg, png hoặc jpg.',
+            'price.numeric' => 'Giá sách phải là một số.',
+            'stock.integer' => 'Số lượng sách phải là một số nguyên.',
+            'page_count.integer' => 'Số trang sách phải là một số nguyên.',
+            'author_ids.array' => 'Tác giả không hợp lệ.',
+            'author_ids.*.exists' => 'Tác giả không tồn tại.',
+            'category_ids.array' => 'Thể loại không hợp lệ.',
+            'category_ids.*.exists' => 'Thể loại không tồn tại.',
         ]);
 
         $cloudinary = new Cloudinary();
@@ -268,65 +289,13 @@ class BookController extends Controller
         }
 
         // Xử lý gallery images
-        $currentImages = [];
+        $currentImages = json_decode($book->images ?? '[]', true);
 
-        // Chỉ xóa và tải lên lại ảnh khi có thay đổi
-        if ($request->has('current_gallery_images') || $request->hasFile('gallery_images')) {
-            // Xóa tất cả ảnh cũ trên Cloudinary
-            $oldImages = json_decode($book->images ?? '[]', true);
-            foreach ($oldImages as $image) {
-                if (isset($image['public_id'])) {
-                    $uploadApi->destroy($image['public_id']);
-                }
-            }
-
-            // Tải lên lại ảnh cũ từ form
-            if ($request->has('current_gallery_images')) {
-                $oldImages = json_decode($request->current_gallery_images, true);
-                foreach ($oldImages as $image) {
-                    // Tải lên lại ảnh cũ
-                    $result = $uploadApi->upload(
-                        $image['url'],
-                        [
-                            'folder' => 'BookStore/Books/Gallery',
-                        ]
-                    );
-
-                    $currentImages[] = [
-                        'url' => $result['secure_url'],
-                        'public_id' => $result['public_id']
-                    ];
-                }
-            }
-
-            // Tải lên ảnh mới
-            if ($request->hasFile('gallery_images')) {
-                foreach ($request->file('gallery_images') as $image) {
-                    $result = $uploadApi->upload(
-                        $image->getRealPath(),
-                        [
-                            'folder' => 'BookStore/Books/Gallery',
-                        ]
-                    );
-
-                    $currentImages[] = [
-                        'url' => $result['secure_url'],
-                        'public_id' => $result['public_id']
-                    ];
-                }
-            }
-        } else {
-            // Nếu không có thay đổi gì về ảnh, giữ nguyên ảnh cũ
-            $currentImages = json_decode($book->images ?? '[]', true);
-        }
-
-        // Nếu có ảnh mới nhưng không có ảnh cũ được giữ lại, lấy ảnh cũ từ database
-        if ($request->hasFile('gallery_images') && !$request->has('current_gallery_images')) {
-            $oldImages = json_decode($book->images ?? '[]', true);
-            foreach ($oldImages as $image) {
-                // Tải lên lại ảnh cũ
+        // Xử lý ảnh mới
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $image) {
                 $result = $uploadApi->upload(
-                    $image['url'],
+                    $image->getRealPath(),
                     [
                         'folder' => 'BookStore/Books/Gallery',
                     ]
@@ -409,5 +378,37 @@ class BookController extends Controller
         $book->save();
 
         return redirect()->back()->with('success', 'Xóa khuyến mãi thành công!');
+    }
+
+    public function deleteImage($public_id)
+    {
+        try {
+            // Tìm sách chứa ảnh này
+            $book = Book::where('images', 'like', '%' . $public_id . '%')->first();
+
+            if ($book) {
+                // Xóa ảnh khỏi Cloudinary
+                $cloudinary = new Cloudinary();
+                $cloudinary->uploadApi()->destroy($public_id);
+
+                // Lấy danh sách ảnh hiện tại
+                $images = json_decode($book->images, true);
+
+                // Lọc bỏ ảnh bị xóa
+                $images = array_filter($images, function($image) use ($public_id) {
+                    return $image['public_id'] !== $public_id;
+                });
+
+                // Cập nhật lại database
+                $book->images = json_encode(array_values($images));
+                $book->save();
+
+                return response()->json(['success' => true]);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy ảnh'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

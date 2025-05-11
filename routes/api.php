@@ -6,6 +6,7 @@ use App\Http\Controllers\API\BookBookmarkController;
 use App\Http\Controllers\API\SocialAuthController;
 use App\Http\Controllers\API\BookController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\ComboController;
 use App\Http\Controllers\API\DiscountController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OrderController;
@@ -91,4 +92,11 @@ Route::prefix('authors')->group(function () {
 Route::prefix('discounts')->group(function () {
     Route::get('/', [DiscountController::class, 'getAllDiscountsWithProducts'])->name('discounts.index');
     Route::get('/{discount}', [DiscountController::class, 'show'])->name('discounts.show');
+});
+
+Route::prefix('combos')->group(function () {
+    Route::get('/', [ComboController::class, 'getListCombos'])->name('combos.index');
+    Route::get('/best-sold', [ComboController::class, 'getBestSoldCombos'])->name('combos.best-sold');
+    Route::get('/best-sold-this-month', [ComboController::class, 'getBestSoldCombosThisMonth'])->name('combos.best-sold-this-month');
+    Route::get('/{slug}', [ComboController::class, 'getComboDetail'])->name('combos.show');
 });

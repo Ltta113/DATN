@@ -124,6 +124,8 @@ class Book extends Model
     {
         return $query
             ->where('status', 'active')
+            ->where('published_at', '<=', now())
+            ->orWhere('published_at', null)
             ->orderBy('published_at', 'desc');
     }
 
@@ -131,6 +133,8 @@ class Book extends Model
     {
         return $query
             ->where('status', 'active')
+            ->where('published_at', '<=', now())
+            ->orWhere('published_at', null)
             ->orderBy('sold', 'desc');
     }
 
@@ -138,6 +142,8 @@ class Book extends Model
     {
         return $query
             ->where('status', 'active')
+            ->where('published_at', '<=', now())
+            ->orWhere('published_at', null)
             ->whereMonth('created_at', now()->month)
             ->orderBy('sold', 'desc');
     }

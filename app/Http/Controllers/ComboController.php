@@ -100,6 +100,10 @@ class ComboController extends Controller
                     if ($book->stock < 1) {
                         $error .= '\nSách "' . $book->title . '" không còn trong kho. ';
                     }
+
+                    if ($book->published_at > now()) {
+                        $error .= '\nSách "' . $book->title . '" chưa được phát hành. ';
+                    }
                 }
             }
         }
@@ -120,6 +124,8 @@ class ComboController extends Controller
             $validated['image'] = $result['secure_url'];
             $validated['public_id'] = $result['public_id'];
         }
+
+        $validated['slug'] = Combo::generateSlug($validated['name']);
 
         $combo = Combo::create($validated);
         $combo->books()->attach($validated['books']);
@@ -184,6 +190,10 @@ class ComboController extends Controller
                 foreach ($books as $book) {
                     if ($book->stock < 1) {
                         $error .= '\nSách "' . $book->title . '" không còn trong kho. ';
+                    }
+
+                    if ($book->published_at > now()) {
+                        $error .= '\nSách "' . $book->title . '" chưa được phát hành. ';
                     }
                 }
             }
