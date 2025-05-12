@@ -22,9 +22,24 @@
         @endif
 
         <div class="bg-white shadow-2xl rounded-2xl overflow-hidden md:flex p-10">
-            <div class="md:w-1/2 bg-gray-100 h-96 md:h-auto">
-                <img src="{{ $book->cover_image }}" alt="{{ $book->title }}"
-                    class="w-full h-full object-cover object-center">
+            <div class="md:w-1/2">
+                <div class="bg-gray-100 h-96 md:h-auto mb-4">
+                    <img src="{{ $book->cover_image }}" alt="{{ $book->title }}"
+                        class="w-full h-full object-contain cursor-pointer"
+                        onclick="openImageModal('{{ $book->cover_image }}')">
+                </div>
+
+                @if($book->images)
+                <div class="grid grid-cols-4 gap-2">
+                    @foreach(json_decode($book->images) as $image)
+                    <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                        <img src="{{ $image->url }}" alt="Gallery image"
+                            class="w-full h-full object-cover cursor-pointer hover:opacity-75 transition"
+                            onclick="openImageModal('{{ $image->url }}')">
+                    </div>
+                    @endforeach
+                </div>
+                @endif
             </div>
 
             <div class="md:w-1/2 p-8 flex flex-col justify-between">
@@ -122,6 +137,18 @@
                         </select>
                     </form>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modal xem ảnh -->
+        <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center">
+            <div class="relative max-w-4xl w-full mx-4">
+                <img id="modalImage" src="" alt="Full size image" class="w-full h-auto max-h-[90vh] object-contain">
+                <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -272,4 +299,34 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function openImageModal(imageUrl) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageUrl;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Đóng modal khi click bên ngoài ảnh
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        // Đóng modal khi nhấn phím ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeImageModal();
+            }
+        });
+    </script>
 @endsection

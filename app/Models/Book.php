@@ -31,6 +31,7 @@ class Book extends Model
         'public_id',
         'isbn',
         'page_count',
+        'images',
     ];
 
     /**
@@ -123,6 +124,8 @@ class Book extends Model
     {
         return $query
             ->where('status', 'active')
+            ->where('published_at', '<=', now())
+            ->orWhere('published_at', null)
             ->orderBy('published_at', 'desc');
     }
 
@@ -130,6 +133,8 @@ class Book extends Model
     {
         return $query
             ->where('status', 'active')
+            ->where('published_at', '<=', now())
+            ->orWhere('published_at', null)
             ->orderBy('sold', 'desc');
     }
 
@@ -137,6 +142,8 @@ class Book extends Model
     {
         return $query
             ->where('status', 'active')
+            ->where('published_at', '<=', now())
+            ->orWhere('published_at', null)
             ->whereMonth('created_at', now()->month)
             ->orderBy('sold', 'desc');
     }
@@ -165,5 +172,15 @@ class Book extends Model
         }
 
         return $price;
+    }
+
+    public function combos()
+    {
+        return $this->belongsToMany(Combo::class, 'combo_book');
+    }
+
+    public function orderItems()
+    {
+        return $this->morphMany(OrderItem::class, 'orderable');
     }
 }

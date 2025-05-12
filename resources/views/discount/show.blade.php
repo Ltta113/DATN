@@ -11,13 +11,16 @@
         </div>
     @endif
     <div class="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-lg">
-        <h1 class="text-3xl font-bold mb-2">{{ $discount->name }}</h1>
-
-        {{-- Chi tiết discount + nút chỉnh sửa / xoá --}}
-        <div class="flex items-center justify-between mb-6">
-            <div class="space-y-2">
+        <div class="flex items-start gap-6 mb-6">
+            @if($discount->banner)
+                <div class="w-1/3">
+                    <img src="{{ $discount->banner }}" alt="Banner" class="w-full h-48 object-cover rounded-lg shadow-md">
+                </div>
+            @endif
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold mb-2">{{ $discount->name }}</h1>
                 @if ($discount->description)
-                    <p class="text-gray-700 text-lg">{{ $discount->description }}</p>
+                    <p class="text-gray-700 text-lg mb-4">{{ $discount->description }}</p>
                 @endif
 
                 <div class="flex flex-wrap gap-4 text-gray-700">
@@ -66,53 +69,38 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="flex items-center gap-3">
-                {{-- Nút chỉnh sửa --}}
-                <a href="{{ route('admin.discounts.edit', $discount->id) }}"
-                    class="px-4 py-2 bg-yellow-500 cursor-pointer text-nowrap text-white rounded hover:bg-yellow-600 transition duration-200">
-                    ✏️ Chỉnh sửa
-                </a>
+        <div class="flex items-center justify-end gap-3 mb-6">
+            {{-- Nút chỉnh sửa --}}
+            <a href="{{ route('admin.discounts.edit', $discount->id) }}"
+                class="px-4 py-2 bg-yellow-500 cursor-pointer text-nowrap text-white rounded hover:bg-yellow-600 transition duration-200">
+                ✏️ Chỉnh sửa
+            </a>
 
-                {{-- Nút xoá --}}
-                <button onclick="document.getElementById('delete-discount-modal').classList.remove('hidden')"
-                    class="px-4 py-2 bg-red-500 cursor-pointer text-nowrap text-white rounded hover:bg-red-600 transition duration-200">
-                    🗑️ Xoá
-                </button>
-            </div>
+            {{-- Nút xoá --}}
+            <button onclick="document.getElementById('delete-discount-modal').classList.remove('hidden')"
+                class="px-4 py-2 bg-red-500 cursor-pointer text-nowrap text-white rounded hover:bg-red-600 transition duration-200">
+                🗑️ Xoá
+            </button>
         </div>
 
         {{-- Tabs --}}
-        <div class="border-b border-gray-200 mb-6">
-            <ul class="flex -mb-px">
-                <li class="mr-1">
-                    <button onclick="showTab('included-books')" id="included-books-tab"
-                        class="inline-block cursor-pointer py-3 px-6 text-blue-600 border-b-2 border-blue-600 font-medium">
-                        📚 Sách được áp dụng ({{ $bookWithDiscount->total() ?? 0 }})
-                    </button>
-                </li>
-                <li class="mr-1">
-                    <button onclick="showTab('excluded-books')" id="excluded-books-tab"
-                        class="inline-block cursor-pointer py-3 px-6 text-gray-500 hover:text-gray-700 font-medium">
-                        📕 Sách chưa áp dụng ({{ $bookWithoutDiscount->total() ?? 0 }})
-                    </button>
-                </li>
-            </ul>
+        <div class="mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <a href="{{ route('admin.discounts.show', ['discount' => $discount->id, 'tab' => 'included']) }}"
+                        class="{{ request('tab', 'included') === 'included' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Sách đang áp dụng
+                    </a>
+                    <a href="{{ route('admin.discounts.show', ['discount' => $discount->id, 'tab' => 'excluded']) }}"
+                        class="{{ request('tab') === 'excluded' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        Sách chưa áp dụng
+                    </a>
+                </nav>
+            </div>
         </div>
 
-        {{-- Tab content --}}
-        <!-- Hiển thị thông báo thành công -->
-        @if (session('success_discount'))
-            <div
-                class="mb-6 bg-green-100 border border-green-300 text-green-800 px-6 py-4 rounded-lg shadow-md flex items-center gap-2">
-                <svg class="w-6 h-6 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="font-medium">{{ session('success_discount') }}</span>
-            </div>
-        @endif
-
-        <!-- Hiển thị thông báo lỗi -->
         @if ($errors->has('discount_error'))
             <div
                 class="mb-6 bg-red-100 border border-red-300 text-red-800 px-6 py-4 rounded-lg shadow-md flex items-center gap-2">

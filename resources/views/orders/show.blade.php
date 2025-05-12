@@ -197,47 +197,69 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="h-16 w-12 bg-gray-100 rounded flex-shrink-0 mr-4">
-                                            @if ($item->book && $item->book->cover_image)
-                                                <a href="{{ route('admin.books.show', $item->book->id) }}">
-                                                    <img src="{{ $item->book->cover_image }}"
-                                                        alt="{{ $item->book->title }}"
-                                                        class="h-full w-full object-cover rounded">
-                                                </a>
+                                            @if ($item->orderable)
+                                                @if ($item->orderable_type === 'App\\Models\\Book')
+                                                    @if ($item->orderable->cover_image)
+                                                        <a href="{{ route('admin.books.show', $item->orderable->id) }}">
+                                                            <img src="{{ $item->orderable->cover_image }}"
+                                                                alt="{{ $item->orderable->title }}"
+                                                                class="h-full w-full object-cover rounded">
+                                                        </a>
+                                                    @else
+                                                        <div class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
+                                                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                            </svg>
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <div class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
+                                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                                        </svg>
+                                                    </div>
+                                                @endif
                                             @else
-                                                <div
-                                                    class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
-                                                    <svg class="w-6 h-6 text-gray-400" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24"
-                                                        xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
-                                                        </path>
+                                                <div class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                                     </svg>
                                                 </div>
                                             @endif
                                         </div>
                                         <div>
-                                            <a href="{{ route('admin.books.show', $item->book->id) }}"
-                                                class="text-sm font-medium text-gray-900 hover:underline">
-                                                {{ $item->book ? $item->book->title : 'Sách không có sẵn' }}
-                                            </a>
-                                            <div class="text-sm text-gray-500">
-                                                {{ $item->book && $item->book->author ? $item->book->author->name : '' }}
-                                            </div>
+                                            @if ($item->orderable)
+                                                @if ($item->orderable_type === 'App\\Models\\Book')
+                                                    <a href="{{ route('admin.books.show', $item->orderable->id) }}" class="text-sm font-medium text-gray-900 hover:underline">
+                                                        {{ $item->orderable->title }}
+                                                    </a>
+                                                    <div class="text-sm text-gray-500">
+                                                        {{ $item->orderable->authors->pluck('name')->join(', ') }}
+                                                    </div>
+                                                @else
+                                                    <a href="{{ route('admin.combos.show', $item->orderable->id) }}" class="text-sm font-medium text-gray-900 hover:underline">
+                                                        {{ $item->orderable->name }}
+                                                    </a>
+                                                    <div class="text-sm text-gray-500">
+                                                        Combo gồm {{ $item->orderable->books->count() }} sách
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <span class="text-sm font-medium text-gray-900">Sản phẩm không có sẵn</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ number_format($item->price, 0, ',', '.') }} ₫
-                                    </div>
+                                    <div class="text-sm text-gray-900">{{ number_format($item->price, 0, ',', '.') }} ₫</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $item->quantity }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
-                                        {{ number_format($item->price * $item->quantity, 0, ',', '.') }} ₫</div>
+                                        {{ number_format($item->price * $item->quantity, 0, ',', '.') }} ₫
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

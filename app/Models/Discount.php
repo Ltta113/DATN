@@ -18,6 +18,8 @@ class Discount extends Model
         'expires_at',
         'type',
         'value',
+        'banner',
+        'public_id',
     ];
     protected $casts = [
         'starts_at' => 'datetime',
@@ -59,6 +61,10 @@ class Discount extends Model
             ->where('expires_at', '>=', $now);
     }
 
+    public function scopeHasBooks($query)
+    {
+        return $query->whereHas('books');
+    }
 
     public function books()
     {

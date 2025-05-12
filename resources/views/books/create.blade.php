@@ -133,7 +133,6 @@
                     </label>
 
                     <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg my-8">
-
                         <div class="flex flex-col items-center">
                             <!-- Image preview -->
                             <div
@@ -145,8 +144,8 @@
 
                             <!-- File input -->
                             <div class="bg-gray-100 rounded-lg flex items-center">
-                                <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                                     </path>
@@ -157,7 +156,34 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
+                <div class="md:col-span-2">
+                    <label for="gallery_images" class="block text-left text-gray-700 mb-2">
+                        Thư viện ảnh
+                    </label>
+
+                    <div class="w-full p-6 bg-white shadow-md rounded-lg my-8">
+                        <div class="flex flex-col items-center">
+                            <!-- Gallery preview -->
+                            <div id="galleryPreview" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4">
+                                <!-- Preview images will be added here -->
+                            </div>
+
+                            <!-- File input -->
+                            <div class="bg-gray-100 rounded-lg flex items-center w-full">
+                                <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                <input type="file" id="gallery_images" name="gallery_images[]" accept="image/*" multiple
+                                    class="bg-transparent w-full py-3 px-4 text-left outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
+                                    onchange="previewGalleryImages(event)">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -439,19 +465,52 @@
 
     <script>
         function previewImage(event) {
-            const file = event.target.files[0]; // Get the selected file
-            const imagePreview = document.getElementById('imagePreview'); // Get the image element
+            const file = event.target.files[0];
+            const imagePreview = document.getElementById('imagePreview');
 
             if (file) {
-                const reader = new FileReader(); // Create a FileReader instance
+                const reader = new FileReader();
 
-                // When the file is read, set the image preview's src to the file's data URL
                 reader.onload = function(e) {
                     imagePreview.src = e.target.result;
                 };
 
-                reader.readAsDataURL(file); // Read the file as a data URL
+                reader.readAsDataURL(file);
             }
+        }
+
+        function previewGalleryImages(event) {
+            const files = event.target.files;
+            const galleryPreview = document.getElementById('galleryPreview');
+            galleryPreview.innerHTML = ''; // Clear existing previews
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <div class="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
+                            <img src="${e.target.result}" alt="Gallery image" class="w-full h-full object-cover">
+                        </div>
+                        <button type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onclick="removeGalleryImage(this)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    `;
+                    galleryPreview.appendChild(div);
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeGalleryImage(button) {
+            const container = button.parentElement;
+            container.remove();
         }
     </script>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Discount;
+use Cloudinary\Cloudinary;
 use Illuminate\Http\Request;
 
 use function Ramsey\Uuid\v1;
@@ -36,6 +37,7 @@ class DiscountController extends Controller
             ],
             'starts_at' => 'nullable|date',
             'expires_at' => 'nullable|date|after_or_equal:starts_at|after:now',
+            'banner' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
             'starts_at.date' => 'Thời gian bắt đầu không hợp lệ.',
             'expires_at.date' => 'Thời gian kết thúc không hợp lệ.',
@@ -47,10 +49,27 @@ class DiscountController extends Controller
             'value.max' => 'Giá trị giảm giá phải nhỏ hơn 100.',
             'value.in' => 'Giá trị giảm giá không hợp lệ.',
             'name.required' => 'Tên chương trình giảm giá không được để trống.',
+            'banner.image' => 'Banner phải là một hình ảnh.',
+            'banner.mimes' => 'Banner phải là một hình ảnh.',
+            'banner.max' => 'Banner phải nhỏ hơn 2MB.',
         ]);
 
-        // Tạo chương trình giảm giá
-        Discount::create($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('banner')) {
+            $cloudinary = new Cloudinary();
+            $uploadApi = $cloudinary->uploadApi();
+            $result = $uploadApi->upload(
+                $request->file('banner')->getRealPath(),
+                [
+                    'folder' => 'BookStore/Discounts'
+                ]
+            );
+            $data['banner'] = $result['secure_url'];
+            $data['public_id'] = $result['public_id'];
+        }
+
+        Discount::create($data);
 
         return redirect()->route('admin.discounts.index')->with('success', 'Tạo chương trình giảm giá thành công!');
     }
@@ -194,13 +213,14 @@ class DiscountController extends Controller
 
     public function update(Request $request, Discount $discount)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'percent' => 'sometimes|numeric|min:0|max:100',
             'starts_at' => 'nullable|date',
             'expires_at' => 'nullable|date|after:starts_at',
             'type' => 'sometimes|in:percent,amount',
+            'banner' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'value' => [
                 'sometimes',
                 'numeric',
@@ -230,9 +250,30 @@ class DiscountController extends Controller
             'type.in' => 'Loại giảm giá không hợp lệ.',
             'type.string' => 'Loại giảm giá phải là một chuỗi.',
             'type.max' => 'Loại giảm giá không được vượt quá 50 ký tự.',
+            'banner.image' => 'Banner phải là một hình ảnh.',
+            'banner.mimes' => 'Banner phải là một hình ảnh.',
+            'banner.max' => 'Banner phải nhỏ hơn 2MB.',
         ]);
 
-        $discount->update($validated);
+        $data = $request->all();
+
+        if ($request->hasFile('banner')) {
+            $cloudinary = new Cloudinary();
+            $uploadApi = $cloudinary->uploadApi();
+            if ($discount->banner) {
+                $uploadApi->destroy($discount->public_id);
+            }
+            $result = $uploadApi->upload(
+                $request->file('banner')->getRealPath(),
+                [
+                    'folder' => 'BookStore/Discounts'
+                ]
+            );
+            $data['banner'] = $result['secure_url'];
+            $data['public_id'] = $result['public_id'];
+        }
+
+        $discount->update($data);
         return redirect()->route('admin.discounts.index')->with('success', 'Cập nhật chương trình giảm giá thành công!');
     }
 
@@ -263,7 +304,6 @@ class DiscountController extends Controller
         }
         // Get all books without discount
         $bookWithDiscount = $discount->books()->paginate(10);
-        // $bookWithoutDiscount = Book::whereDoesntHave('discount');
 
         return view('discount.show', compact('discount', 'bookWithDiscount', 'bookWithoutDiscount'));
     }

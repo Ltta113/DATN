@@ -1,6 +1,7 @@
 @extends('layout')
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-lg">
         <h1 class="text-2xl font-bold text-center mb-8">Chỉnh Sửa Sách</h1>
 
@@ -136,7 +137,6 @@
                     </label>
 
                     <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg my-8">
-
                         <div class="flex flex-col items-center">
                             <!-- Image preview -->
                             <div
@@ -160,7 +160,44 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
+                <div class="md:col-span-2">
+                    <label for="gallery_images" class="block text-left text-gray-700 mb-2">
+                        Thư viện ảnh
+                    </label>
+
+                    <div class="w-full p-6 bg-white shadow-md rounded-lg my-8">
+                        <div class="flex flex-col items-center">
+                            <!-- Gallery preview -->
+                            <div id="galleryPreview" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-4">
+                                @if($book->images)
+                                    @foreach(json_decode($book->images) as $image)
+                                        <div class="relative group" data-image='{"url":"{{ $image->url }}","public_id":"{{ $image->public_id }}"}'>
+                                            <div class="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
+                                                <img src="{{ $image->url }}" alt="Gallery image" class="w-full h-full object-cover">
+                                            </div>
+                                            <button type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onclick="removeGalleryImage(this)">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </div>
+
+                            <!-- File input -->
+                            <div class="bg-gray-100 rounded-lg flex items-center w-full">
+                                <svg class="w-5 h-5 text-gray-500 mx-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <input type="file" id="gallery_images" name="gallery_images[]" accept="image/*" multiple
+                                    class="bg-transparent w-full py-3 px-4 text-left outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100"
+                                    onchange="previewGalleryImages(event)">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -459,6 +496,95 @@
                 reader.readAsDataURL(file); // Read the file as a data URL
             }
         }
+    </script>
+
+    <script>
+        function previewGalleryImages(event) {
+            const files = event.target.files;
+            const galleryPreview = document.getElementById('galleryPreview');
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <div class="aspect-w-4 aspect-h-3 bg-gray-100 rounded-lg overflow-hidden">
+                            <img src="${e.target.result}" alt="Gallery image" class="w-full h-full object-cover">
+                        </div>
+                        <button type="button" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onclick="removeGalleryImage(this)">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    `;
+                    galleryPreview.appendChild(div);
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeGalleryImage(button) {
+            const container = button.parentElement;
+            const imageData = container.getAttribute('data-image');
+
+            if (imageData) {
+                try {
+                    const image = JSON.parse(imageData);
+                    console.log('Deleting image:', image);
+
+                    // Gọi API xóa ảnh khỏi Cloudinary và database
+                    fetch(`/admin/books/delete-image/${encodeURIComponent(image.public_id)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            // Xóa ảnh khỏi giao diện ngay lập tức
+                            container.remove();
+                            // Hiển thị thông báo thành công
+                            const toast = document.createElement('div');
+                            toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                            toast.textContent = 'Xóa ảnh thành công';
+                            document.body.appendChild(toast);
+
+                            // Tự động ẩn thông báo sau 3 giây
+                            setTimeout(() => {
+                                toast.remove();
+                            }, 3000);
+                        } else {
+                            alert('Có lỗi xảy ra khi xóa ảnh: ' + (data.message || 'Không xác định'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Lỗi:', error);
+                        alert('Có lỗi xảy ra khi xóa ảnh: ' + error.message);
+                    });
+                } catch (error) {
+                    console.error('Lỗi khi parse dữ liệu ảnh:', error);
+                    alert('Lỗi khi xử lý dữ liệu ảnh: ' + error.message);
+                }
+            } else {
+                // Nếu là ảnh mới chưa upload lên Cloudinary
+                container.remove();
+            }
+        }
+
+        // Xóa phần xử lý current_gallery_images trong form submit vì không cần nữa
+        document.getElementById('edit-category-form').addEventListener('submit', function(e) {
+            // Không cần preventDefault nữa vì không cần xử lý gì thêm
+        });
     </script>
 
 @endsection

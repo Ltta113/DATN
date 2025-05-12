@@ -22,6 +22,7 @@ class BookResource extends JsonResource
             'isbn' => $this->isbn,
             'published_at' => $this->published_at,
             'cover_image' => $this->cover_image,
+            'images' => $this->images,
             'price' => $this->price,
             'stock' => $this->stock,
             'sold' => $this->sold,
@@ -39,6 +40,7 @@ class BookResource extends JsonResource
             'authors' => AuthorResource::collection($this->whenLoaded('authors')),
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
             'quantity' => $this->when(isset($this->quantity), $this->quantity),
+            'combos' => ComboResource::collection($this->whenLoaded('combos')),
         ];
     }
 }
