@@ -24,6 +24,7 @@ class DiscountResource extends JsonResource
             'expires_at' => $this->expires_at,
             'type' => $this->type,
             'value' => $this->value,
+            'banner' => $this->banner,
         ];
     }
 }

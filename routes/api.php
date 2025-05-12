@@ -91,6 +91,7 @@ Route::prefix('authors')->group(function () {
 
 Route::prefix('discounts')->group(function () {
     Route::get('/', [DiscountController::class, 'getAllDiscountsWithProducts'])->name('discounts.index');
+    Route::get('/list', [DiscountController::class, 'getListDiscounts'])->name('discounts.list');
     Route::get('/{discount}', [DiscountController::class, 'show'])->name('discounts.show');
 });
 

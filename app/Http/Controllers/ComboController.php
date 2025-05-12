@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\Combo;
 use Cloudinary\Cloudinary;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ComboController extends Controller
 {
@@ -34,8 +35,9 @@ class ComboController extends Controller
         return view('combos.index', compact('combos'));
     }
 
-    public function show(Combo $combo)
+    public function show(string $id)
     {
+        $combo = Combo::withTrashed()->findOrFail($id);
         $books = $combo->books;
         return view('combos.show', compact('combo', 'books'));
     }

@@ -12,7 +12,8 @@
         </div>
 
         @if (session('success'))
-            <div class="mb-6 bg-green-100 border border-green-300 text-green-800 px-6 py-4 rounded-lg shadow-md flex items-center gap-2">
+            <div
+                class="mb-6 bg-green-100 border border-green-300 text-green-800 px-6 py-4 rounded-lg shadow-md flex items-center gap-2">
                 <svg class="w-6 h-6 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
@@ -103,15 +104,21 @@
                                                         class="h-full w-full object-cover rounded">
                                                 </a>
                                             @else
-                                                <div class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
-                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                <div
+                                                    class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                                                        </path>
                                                     </svg>
                                                 </div>
                                             @endif
                                         </div>
                                         <div>
-                                            <a href="{{ route('admin.books.show', $book->id) }}" class="text-sm font-medium text-gray-900 hover:underline">
+                                            <a href="{{ route('admin.books.show', $book->id) }}"
+                                                class="text-sm font-medium text-gray-900 hover:underline">
                                                 {{ $book->title }}
                                             </a>
                                             <div class="text-sm text-gray-500">
@@ -144,23 +151,36 @@
                 Chỉnh sửa
             </a>
 
-            <form action="{{ route('admin.combos.destroy', $combo->id) }}" method="POST" class="inline"
-                id="delete-combo">
-                @csrf
-                @method('DELETE')
-                <button type="button"
-                    onclick="document.getElementById('modal-delete-confirm').classList.remove('hidden')"
-                    class="bg-red-500 cursor-pointer hover:bg-red-600 text-white py-2 px-6 rounded-lg transition duration-200 flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Xóa
-                </button>
-            </form>
-            <x-confirm-modal id="modal-delete-confirm" title="Xác nhận"
-                message="Bạn có chắc chắn muốn xóa combo này?" confirm-text="Xóa"
-                cancel-text="Hủy" form-id="delete-combo" action="delete" />
+            @if (!$combo->deleted_at)
+                <form action="{{ route('admin.combos.destroy', $combo->id) }}" method="POST" class="inline"
+                    id="delete-combo">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button"
+                        onclick="document.getElementById('modal-delete-confirm').classList.remove('hidden')"
+                        class="bg-red-500 cursor-pointer hover:bg-red-600 text-white py-2 px-6 rounded-lg transition duration-200 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Xóa
+                    </button>
+                </form>
+                <x-confirm-modal id="modal-delete-confirm" title="Xác nhận" message="Bạn có chắc chắn muốn xóa combo này?"
+                    confirm-text="Xóa" cancel-text="Hủy" form-id="delete-combo" action="delete" />
+            @else
+                <form action="{{ route('admin.combos.restore', $combo->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                        class="bg-green-500 cursor-pointer hover:bg-green-600 text-white py-2 px-6 rounded-lg transition duration-200 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Khôi phục
+                    </button>
+                </form>
+            @endif
         </div>
     </div>
 @endsection
