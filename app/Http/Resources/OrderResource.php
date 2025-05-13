@@ -36,6 +36,7 @@ class OrderResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
+            'feedback' => $this->hasFeedback() ? new OrderFeedbackResource($this->feedback) : null,
         ];
     }
 }
