@@ -14,6 +14,7 @@ use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\TransactionController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\ZaloPayController;
+use App\Http\Controllers\API\OrderFeedbackController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +64,12 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     });
 
     Route::get('/bookmarks', [BookBookmarkController::class, 'getListBookmarks'])->name('user.bookmarks');
+
+    // Order Feedback Routes
+    Route::post('/order-feedback', [OrderFeedbackController::class, 'store'])->name('user.order-feedback');
+    Route::put('/order-feedback/{orderFeedback}', [OrderFeedbackController::class, 'update'])->name('user.order-feedback.update');
+    Route::delete('/order-feedback/{orderFeedback}', [OrderFeedbackController::class, 'destroy'])->name('user.order-feedback.destroy');
+    Route::get('/order-feedback/{orderFeedback}', [OrderFeedbackController::class, 'show'])->name('user.order-feedback.show');
 });
 
 Route::post('user/transactions/callback', [TransactionController::class, 'callbackDeposite'])->name('transactions.updateStatus');

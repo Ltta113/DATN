@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
@@ -59,6 +60,16 @@ class Order extends Model
         return $this->morphMany(Review::class, 'reviewable');
     }
 
+    /**
+     * Get the feedback for the order.
+     *
+     * @return HasOne
+     */
+    public function feedback(): HasOne
+    {
+        return $this->hasOne(OrderFeedback::class);
+    }
+
     public function getStarRatingAttribute()
     {
         return $this->reviews()->avg('rating') ?? 0;
@@ -67,5 +78,10 @@ class Order extends Model
     public function getStarRatingCountAttribute()
     {
         return $this->reviews()->count() ?? 0;
+    }
+
+    public function hasFeedback()
+    {
+        return $this->feedback()->exists();
     }
 }
