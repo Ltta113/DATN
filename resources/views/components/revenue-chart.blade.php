@@ -1,4 +1,4 @@
-<div class="bg-white rounded-lg shadow-md p-6 mt-6">
+<div class="bg-white rounded-lg">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold text-gray-800">Biểu đồ doanh thu</h2>
         <div>
@@ -8,7 +8,9 @@
         </div>
     </div>
 
-    <canvas id="revenueChart" height="100"></canvas>
+    <div class="min-h-[500px]">
+        <canvas id="revenueChart"></canvas>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -39,16 +39,18 @@
                         <tr class="hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer rounded-md">
                             <!-- Avatar + Tên -->
                             <td class="px-4 py-3 rounded-l-2xl">
-                                <div class="flex items-center gap-3 max-w-[220px]">
-                                    <div class="h-[50px] w-[50px] overflow-hidden rounded-md shrink-0">
-                                        <img class="object-cover w-full h-full"
-                                            src="{{ $user->avatar ?: 'https://res.cloudinary.com/dswj1rtvu/image/upload/v1745051027/BookStore/Authors/istockphoto-1451587807-612x612_f8h3fr.jpg' }}"
-                                            alt="{{ $user->full_name }}">
+                                <a href="{{ route('admin.users.show', $user->id) }}">
+                                    <div class="flex items-center gap-3 max-w-[220px]">
+                                        <div class="h-[50px] w-[50px] overflow-hidden rounded-md shrink-0">
+                                            <img class="object-cover w-full h-full"
+                                                src="{{ $user->avatar ?: 'https://res.cloudinary.com/dswj1rtvu/image/upload/v1745051027/BookStore/Authors/istockphoto-1451587807-612x612_f8h3fr.jpg' }}"
+                                                alt="{{ $user->full_name }}">
+                                        </div>
+                                        <p class="truncate font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                                            {{ $user->full_name }}
+                                        </p>
                                     </div>
-                                    <p class="truncate font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                                        {{ $user->full_name }}
-                                    </p>
-                                </div>
+                                </a>
                             </td>
 
                             <!-- Số đơn hàng -->

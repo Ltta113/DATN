@@ -117,6 +117,9 @@
                                             @case('zalopay')
                                                 ZaloPay
                                             @break
+
+                                            @default
+                                                {{ $order->payment_method }}
                                         @endswitch
                                         </p>
 
