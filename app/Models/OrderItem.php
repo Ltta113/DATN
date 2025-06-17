@@ -40,6 +40,16 @@ class OrderItem extends Model
         return $this->belongsTo(Book::class);
     }
 
+    /**
+     * Get the combo that owns the order item.
+     *
+     * @return BelongsTo
+     */
+    public function combo(): BelongsTo
+    {
+        return $this->belongsTo(Combo::class);
+    }
+
     public function orderable(): MorphTo
     {
         return $this->morphTo();

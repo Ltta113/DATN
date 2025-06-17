@@ -32,7 +32,7 @@
         </div>
 
         <div class="bg-green-50 rounded-lg p-4 shadow-sm border cursor-pointer border-green-100"
-            onclick="window.location.href = '{{ route('admin.orders.index', ['status' => 'paid']) }}'">
+            onclick="window.location.href = '{{ route('admin.orders.index', ['status' => 'pending']) }}'">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-green-600 font-medium">Đơn hàng đang chờ giao</p>

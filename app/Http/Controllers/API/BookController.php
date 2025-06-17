@@ -10,6 +10,7 @@ use App\Models\Book;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BookController extends Controller
 {
@@ -79,15 +80,20 @@ class BookController extends Controller
         ];
 
         try {
-            $response = Http::get(env('AI_URL') . "/api/recommend/book/{$book->id}?top_n=5");
+            $response = Http::get(env('AI_URL') . "/api/recommend/book/{$book->id}?top_n=10");
 
             if ($response->successful() && isset($response['recommendations'])) {
-                $recommendIds = collect($response['recommendations'])->pluck('id_x')->toArray();
-
+                $recommendIds = collect($response['recommendations'])->pluck('id')->toArray();
+                Log::info($recommendIds);
                 $recommendBooks = Book::whereIn('id', $recommendIds)
                     ->where('status', 'active')
                     ->with(['publisher', 'authors', 'categories'])
-                    ->get();
+                    ->get()
+                    ->sortBy(function ($book) use ($recommendIds) {
+                        return array_search($book->id, $recommendIds);
+                    })
+                    ->values()
+                    ->take(5);
 
                 if ($recommendBooks->isNotEmpty()) {
                     $responseData['recommendations'] = BookResource::collection($recommendBooks);

@@ -12,6 +12,7 @@ use Cloudinary\Cloudinary;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class BookController extends Controller
@@ -166,6 +167,13 @@ class BookController extends Controller
 
         if (!empty($validated['category_ids'])) {
             $book->categories()->sync($validated['category_ids']);
+        }
+
+        $response = Http::post(env('AI_URL') . "/api/retrain");
+
+        if ($response->successful()) {
+            return redirect()->route('admin.books.show', $book)
+                ->with('success', 'Tạo mới sách thành công');
         }
 
         return redirect()->route('admin.books.show', $book)
@@ -323,6 +331,13 @@ class BookController extends Controller
 
         if (!empty($validated['category_ids'])) {
             $book->categories()->sync($validated['category_ids']);
+        }
+
+        $response = Http::post(env('AI_URL') . "/api/retrain");
+
+        if ($response->successful()) {
+            return redirect()->route('admin.books.show', $book)
+                ->with('success', 'Cập nhật sách thành công');
         }
 
         return redirect()->route('admin.books.show', $book)

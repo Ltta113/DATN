@@ -24,12 +24,12 @@ class TotalComponent extends Component
     public function __construct()
     {
         $this->totalStockBooks = Book::sum('stock');
-        $this->totalValidOrders = Order::where('status', 'paid')->count();
-        $this->totalOkOrdersThisMonth = Order::whereIn('status', ['paid', 'shipped', 'completed', 'received'])
+        $this->totalValidOrders = Order::where('status', 'pending')->count();
+        $this->totalOkOrdersThisMonth = Order::whereIn('status', ['pending', 'shipped', 'completed'])
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->count();
-        $this->totalOkOrdersLastMonth = Order::whereIn('status', ['paid', 'shipped', 'completed', 'received'])
+        $this->totalOkOrdersLastMonth = Order::whereIn('status', ['pending', 'shipped', 'completed'])
             ->whereMonth('created_at', now()->subMonth()->month)
             ->whereYear('created_at', now()->subMonth()->year)
             ->count();

@@ -64,10 +64,6 @@ class ZaloPayService
     {
         $result = [];
 
-        Log::info('ZaloPay callback received', [
-            'raw_request' => $request->getContent()
-        ]);
-
         try {
             $postDataJson = $request->getContent();
             $postDataArr = json_decode($postDataJson, true);
@@ -98,8 +94,6 @@ class ZaloPayService
                     throw new \Exception('Missing app_trans_id');
                 }
 
-                // Cập nhật đơn hàng
-                Order::where('order_code', $appTransId)->update(['status' => 'paid']);
                 Sale::create([
                     'amount' => $dataJson['amount'],
                     'description' => "ZaloPay - Thanh toán đơn hàng #$appTransId",

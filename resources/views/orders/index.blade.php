@@ -27,8 +27,6 @@
                             <option value="">Tất cả trạng thái</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Chờ xử lý
                             </option>
-                            <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Đã thanh toán
-                            </option>
                             <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Hoàn thành
                             </option>
                             <option value="canceled" {{ request('status') == 'canceled' ? 'selected' : '' }}>Đã hủy
@@ -38,15 +36,7 @@
                             <option value="need_refund" {{ request('status') == 'need_refund' ? 'selected' : '' }}>Cần hoàn
                                 tiền
                             </option>
-                            <option value="out_of_stock" {{ request('status') == 'out_of_stock' ? 'selected' : '' }}>Hết
-                                hàng
-                            </option>
-                            <option value="admin_canceled" {{ request('status') == 'admin_canceled' ? 'selected' : '' }}>Đã
-                                hủy bởi admin
-                            </option>
                             <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Đang giao hàng
-                            </option>
-                            <option value="received" {{ request('status') == 'received' ? 'selected' : '' }}>Đã nhận hàng
                             </option>
                         </select>
                     </div>
@@ -56,9 +46,11 @@
                         <select name="payment_method" id="payment_method"
                             class="w-full bg-gray-100 py-3 px-4 rounded-lg outline-none">
                             <option value="">Tất cả phương thức</option>
-                            <option value="zalopay" {{ request('payment_method') == 'ZALOPAY' ? 'selected' : '' }}>ZALOPAY
+                            <option value="zalopay" {{ request('payment_method') == 'zalopay' ? 'selected' : '' }}>ZALOPAY
                             </option>
-                            <option value="wallet" {{ request('payment_method') == 'WALLET' ? 'selected' : '' }}>Ví điện tử
+                            <option value="wallet" {{ request('payment_method') == 'wallet' ? 'selected' : '' }}>Ví điện tử
+                            </option>
+                            <option value="cod" {{ request('payment_method') == 'cod' ? 'selected' : '' }}>Thanh toán tiền mặt
                             </option>
                         </select>
                     </div>
@@ -166,20 +158,14 @@
                                     <span
                                         class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 @if ($order->status == 'pending') bg-yellow-100 text-yellow-800
-                                @elseif($order->status == 'paid') bg-blue-100 text-blue-800
                                 @elseif($order->status == 'completed') bg-green-100 text-green-800
                                 @elseif($order->status == 'canceled') bg-red-100 text-red-800
                                 @elseif($order->status == 'refunded') bg-purple-100 text-purple-800
                                 @elseif($order->status == 'need_refund') bg-orange-100 text-orange-800
-                                @elseif($order->status == 'out_of_stock') bg-gray-200 text-gray-800
-                                @elseif($order->status == 'admin_canceled') bg-gray-300 text-gray-800
                                 @elseif($order->status == 'shipped') bg-blue-200 text-blue-800
-                                @elseif($order->status == 'received') bg-green-200 text-green-800
                                 @else bg-gray-100 text-gray-800 @endif">
                                         @if ($order->status == 'pending')
                                             Chờ xử lý
-                                        @elseif($order->status == 'paid')
-                                            Đã thanh toán
                                         @elseif($order->status == 'completed')
                                             Hoàn thành
                                         @elseif($order->status == 'canceled')
@@ -188,12 +174,8 @@
                                             Đã hoàn tiền
                                         @elseif($order->status == 'need_refund')
                                             Cần hoàn tiền
-                                        @elseif($order->status == 'admin_canceled')
-                                            Đã hủy bởi admin
                                         @elseif($order->status == 'shipped')
                                             Đang giao hàng
-                                        @elseif($order->status == 'out_of_stock')
-                                            Hết hàng
                                         @elseif($order->status == 'received')
                                             Đã nhận hàng
                                         @else

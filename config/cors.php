@@ -28,6 +28,7 @@ return [
     'allowed_origins' => [
         'http://localhost:3000',
         'http://127.0.0.1:3000',
+        'https://datn-ui-xi.vercel.app',
         'https://bookstore-ltta113-ltta113s-projects.vercel.app'
     ],
 

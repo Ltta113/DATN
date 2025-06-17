@@ -78,10 +78,9 @@ class OrderController extends Controller
 
     public function shipped(Order $order)
     {
-        $isCodPending = $order->status === 'pending' && $order->payment_method === 'cod';
-        $isPaidOnline = $order->status === 'paid' && $order->payment_method !== 'cod';
+        $isCodPending = $order->status === 'pending';
 
-        if ($isCodPending || $isPaidOnline) {
+        if ($isCodPending) {
             foreach ($order->orderItems as $item) {
                 if ($item->orderable_type === 'App\\Models\\Book') {
                     $book = $item->orderable;
@@ -140,7 +139,7 @@ class OrderController extends Controller
 
             Notification::create([
                 'user_id' => $order->user_id,
-                'order_code' => $order->order_code,
+                'order_code' => $order->id,
                 'title' => 'Đơn hàng đang được giao',
                 'message' => 'Đơn hàng #' . $order->order_code . ' của bạn đang được giao.',
             ]);
@@ -159,10 +158,12 @@ class OrderController extends Controller
     {
         $outOfStockItems = [];
 
-        Sale::create([
-            'amount' => -$order->total_amount,
-            'description' => 'Đơn hàng #' . $order->order_code . ' đã bị hủy.',
-        ]);
+        if ($order->payment_method !== 'cod') {
+            Sale::create([
+                'amount' => -$order->total_amount,
+                'description' => 'Đơn hàng #' . $order->order_code . ' đã bị hủy.',
+            ]);
+        }
 
         foreach ($order->orderItems as $item) {
             if ($item->orderable_type === 'App\\Models\\Book') {
@@ -192,7 +193,7 @@ class OrderController extends Controller
 
             Notification::create([
                 'user_id' => $order->user_id,
-                'order_code' => $order->order_code,
+                'order_code' => $order->id,
                 'title' => 'Thông báo sản phẩm hết hàng',
                 'message' => 'Các sản phẩm sau đã hết hàng: ' . implode(', ', $outOfStockItems) . '. Tiền đã được hoàn lại vào ví của bạn.',
             ]);
@@ -215,7 +216,7 @@ class OrderController extends Controller
 
         Notification::create([
             'user_id' => $order->user_id,
-            'order_code' => $order->order_code,
+            'order_code' => $order->id,
             'title' => 'Thông báo đơn hàng bị hủy',
             'message' => 'Đơn hàng #' . $order->order_code . ' của bạn đã bị hủy.',
         ]);
@@ -228,6 +229,12 @@ class OrderController extends Controller
     public function refundOrder(Order $order, Request $request)
     {
         if ($order->status !== 'need_refund') {
+            return redirect()->route('admin.orders.show', [
+                'order' => $order->id,
+            ])->with('error_order', 'Đơn hàng không đủ điều kiện hoàn tiền.');
+        }
+
+        if ($order->payment_method === 'cod') {
             return redirect()->route('admin.orders.show', [
                 'order' => $order->id,
             ])->with('error_order', 'Đơn hàng không đủ điều kiện hoàn tiền.');
@@ -260,13 +267,10 @@ class OrderController extends Controller
             'amount' => $order->total_amount,
             'status' => 'completed',
         ]);
-        Sale::create([
-            'amount' => -$order->total_amount,
-            'description' => "Hoàn tiền đơn hàng #{$order->order_code}",
-        ]);
+
         Notification::create([
             'user_id' => $order->user_id,
-            'order_code' => $order->order_code,
+            'order_code' => $order->id,
             'title' => 'Hoàn tiền đơn hàng',
             'message' => "Đơn hàng #{$order->order_code} của bạn đã được hoàn tiền.",
         ]);

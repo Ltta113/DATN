@@ -17,8 +17,7 @@ use App\Models\Sale;
 use Illuminate\Support\Str;
 use App\Service\PayOSService;
 use App\Service\ZaloPayService;
-use Illuminate\Container\Attributes\Log;
-use Illuminate\Support\Facades\Log as FacadesLog;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -198,14 +197,19 @@ class OrderController extends Controller
 
             foreach ($validated['order_items'] as $item) {
                 if ($item['orderable_type'] === 'book') {
-                    $book = Book::findOrFail($item['orderable_id']);
+                    $book = Book::find($item['orderable_id']);
+
+                    if (!$book) {
+                        return response()->json([
+                            'message' => "Sách không tồn tại.",
+                        ], 422);
+                    }
 
                     if ($book->stock < $item['quantity']) {
                         return response()->json([
                             'message' => "Sách {$book->title} không đủ số lượng tồn kho.",
                         ], 422);
                     }
-
 
                     $order->orderItems()->create([
                         'quantity' => $item['quantity'],
@@ -214,7 +218,13 @@ class OrderController extends Controller
                         'orderable_type' => 'App\\Models\\Book',
                     ]);
                 } else {
-                    $combo = Combo::findOrFail($item['orderable_id']);
+                    $combo = Combo::find($item['orderable_id']);
+
+                    if (!$combo) {
+                        return response()->json([
+                            'message' => "Combo không tồn tại.",
+                        ], 422);
+                    }
 
                     if (!$combo->hasEnoughStock($item['quantity'])) {
                         return response()->json([
@@ -246,13 +256,25 @@ class OrderController extends Controller
             if ($validated['payment_method'] === 'zalopay') {
                 $zaloPay = new ZaloPayService();
 
-                $items = $order->orderItems->map(function ($item) {
-                    return [
-                        'name' => $item->orderable_type === 'App\\Models\\Book' ? $item->book->title : $item->combo->name,
-                        'quantity' => $item->quantity,
-                        'price' => (int) $item->price
-                    ];
-                })->toArray();
+                $items = $order->orderItems()
+                    ->get()
+                    ->map(function ($item) {
+                        $name = '';
+
+                        if ($item->orderable_type === 'App\\Models\\Book') {
+                            $book = Book::find($item->orderable_id);
+                            $name = $book->title;
+                        } else {
+                            $combo = Combo::find($item->orderable_id);
+                            $name = $combo->name;
+                        }
+
+                        return [
+                            'name' => $name,
+                            'quantity' => $item->quantity,
+                            'price' => (int) $item->price
+                        ];
+                    })->toArray();
 
                 try {
                     $payResponse = $zaloPay->createOrder(
@@ -290,8 +312,13 @@ class OrderController extends Controller
                     'status' => 'completed',
                 ]);
 
-                $order->update(['status' => 'paid']);
+                return response()->json([
+                    'message' => 'Đặt hàng thành công',
+                    'data' => new OrderResource($order),
+                ], 201);
+            }
 
+            if ($validated['payment_method'] === 'cod') {
                 return response()->json([
                     'message' => 'Đặt hàng thành công',
                     'data' => new OrderResource($order),
@@ -351,10 +378,7 @@ class OrderController extends Controller
             ], 403);
         }
 
-        if (
-            $order->status !== 'pending' &&
-            !($order->status === 'paid' && $order->payment_method !== 'cod')
-        ) {
+        if (!($order->status === 'pending' || ($order->status === 'completed' && $order->payment_method === 'cod'))) {
             return response()->json([
                 'message' => 'Đơn hàng không thể hủy.',
             ], 422);
@@ -362,7 +386,7 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
-            if ($order->status === 'paid') {
+            if ($order->payment_method !== 'cod') {
                 $request->user()->wallet->increment('balance', $order->total_amount);
                 $request->user()->transactions()->create([
                     'description' => "Hủy đơn hàng #{$order->order_code}",
@@ -370,6 +394,12 @@ class OrderController extends Controller
                     'status' => 'completed',
                 ]);
             }
+
+            Sale::create([
+                'amount' => -$order->total_amount,
+                'description' => "Hủy đơn hàng #{$order->order_code}",
+            ]);
+
             $order->update(['status' => 'canceled']);
 
             DB::commit();
@@ -402,32 +432,17 @@ class OrderController extends Controller
             ], 422);
         }
 
-        $order->update(['status' => 'received']);
+        $order->update(['status' => 'completed']);
+
+        if ($order->payment_method !== 'cod') {
+            Sale::create([
+                'amount' => $order->total_amount,
+                'description' => "Tiền mặt - Thanh toán đơn hàng #{$order->order_code}",
+            ]);
+        }
 
         return response()->json([
             'message' => 'Xác nhận nhận đơn hàng thành công',
-            'data' => new OrderResource($order),
-        ]);
-    }
-
-    public function completeOrder(Order $order, Request $request): JsonResponse
-    {
-        if ($order->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Bạn không có quyền xác nhận đơn hàng này.',
-            ], 403);
-        }
-
-        if ($order->status !== 'received') {
-            return response()->json([
-                'message' => 'Đơn hàng không thể xác nhận.',
-            ], 422);
-        }
-
-        $order->update(['status' => 'completed']);
-
-        return response()->json([
-            'message' => 'Xác nhận hoàn thành đơn hàng thành công',
             'data' => new OrderResource($order),
         ]);
     }
@@ -440,9 +455,15 @@ class OrderController extends Controller
             ], 403);
         }
 
-        if ($order->status !== 'received') {
+        if ($order->status !== 'completed') {
             return response()->json([
                 'message' => 'Đơn hàng không thể yêu cầu hoàn tiền.',
+            ], 422);
+        }
+
+        if ($order->updated_at->addDays(7) < now()) {
+            return response()->json([
+                'message' => 'Đơn hàng đã quá thời gian 7 ngày để hoàn tiền.',
             ], 422);
         }
 

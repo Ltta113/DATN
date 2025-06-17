@@ -1,11 +1,8 @@
 @extends('layout')
 
 @section('content')
-    <!-- Thêm CSS và JS của Lightbox -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
 
-    <div class="max-w-7xl mx-auto p-6">
+    <div class="max-w-7xl mx-auto p-6 bg-white shadow-md rounded-lg">
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-800">Chi tiết đơn hàng #{{ $order->order_code }}</h1>
@@ -147,6 +144,8 @@
                             ZaloPay
                         @elseif($order->payment_method == 'wallet')
                             Ví điện tử
+                        @elseif($order->payment_method == 'cod')
+                            Thanh toán tiền mặt
                         @else
                             {{ $order->payment_method }}
                         @endif
@@ -172,36 +171,38 @@
         </div>
 
         <!-- Feedback của đơn hàng -->
-        @if($order->feedback)
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Đánh giá từ khách hàng</h2>
-            <div class="space-y-4">
-                <div class="flex items-center">
-                    <div class="flex">
-                        @for($i = 1; $i <= 5; $i++)
-                            <svg class="w-5 h-5 {{ $i <= $order->feedback->rating ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                        @endfor
+        @if ($order->feedback)
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Đánh giá từ khách hàng</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <div class="flex">
+                            @for ($i = 1; $i <= 5; $i++)
+                                <svg class="w-5 h-5 {{ $i <= $order->feedback->rating ? 'text-yellow-400' : 'text-gray-300' }}"
+                                    fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            @endfor
+                        </div>
+                        <span class="ml-2 text-gray-600">{{ $order->feedback->rating }}/5 sao</span>
                     </div>
-                    <span class="ml-2 text-gray-600">{{ $order->feedback->rating }}/5 sao</span>
-                </div>
-                <div class="text-gray-700">
-                    {{ $order->feedback->feedback }}
-                </div>
-                @if($order->feedback->images && count($order->feedback->images) > 0)
-                <div class="grid grid-cols-3 gap-2 mt-4">
-                    @foreach($order->feedback->images as $image)
-                    <div class="relative aspect-square">
-                        <img src="{{ $image['url'] }}" alt="Feedback image"
-                            class="h-full w-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-                            onclick="openImageModal('{{ $image['url'] }}')">
+                    <div class="text-gray-700">
+                        {{ $order->feedback->feedback }}
                     </div>
-                    @endforeach
+                    @if ($order->feedback->images && count($order->feedback->images) > 0)
+                        <div class="grid grid-cols-3 gap-2 mt-4">
+                            @foreach ($order->feedback->images as $image)
+                                <div class="relative aspect-square">
+                                    <img src="{{ $image['url'] }}" alt="Feedback image"
+                                        class="h-full w-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                                        onclick="openImageModal('{{ $image['url'] }}')">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
-                @endif
             </div>
-        </div>
         @endif
 
         <!-- Danh sách các sản phẩm -->
@@ -243,23 +244,37 @@
                                                                 class="h-full w-full object-cover rounded">
                                                         </a>
                                                     @else
-                                                        <div class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
-                                                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                        <div
+                                                            class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
+                                                            <svg class="w-6 h-6 text-gray-400" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                                                                </path>
                                                             </svg>
                                                         </div>
                                                     @endif
                                                 @else
-                                                    <div class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
-                                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                                    <div
+                                                        class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
+                                                        <svg class="w-6 h-6 text-gray-400" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16">
+                                                            </path>
                                                         </svg>
                                                     </div>
                                                 @endif
                                             @else
-                                                <div class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
-                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                <div
+                                                    class="h-full w-full bg-gray-200 rounded flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                                                        </path>
                                                     </svg>
                                                 </div>
                                             @endif
@@ -267,14 +282,18 @@
                                         <div>
                                             @if ($item->orderable)
                                                 @if ($item->orderable_type === 'App\\Models\\Book')
-                                                    <a href="{{ route('admin.books.show', $item->orderable->id) }}" class="text-sm font-medium text-gray-900 hover:underline">
+                                                    <a href="{{ route('admin.books.show', $item->orderable->id) }}"
+                                                        class="block max-w-[200px] text-sm font-medium text-gray-900 hover:underline truncate"
+                                                        title="{{ $item->orderable->title }}">
                                                         {{ $item->orderable->title }}
                                                     </a>
                                                     <div class="text-sm text-gray-500">
                                                         {{ $item->orderable->authors->pluck('name')->join(', ') }}
                                                     </div>
                                                 @else
-                                                    <a href="{{ route('admin.combos.show', $item->orderable->id) }}" class="text-sm font-medium text-gray-900 hover:underline">
+                                                    <a href="{{ route('admin.combos.show', $item->orderable->id) }}"
+                                                        class="block max-w-[200px] text-sm font-medium text-gray-900 hover:underline truncate"
+                                                        title="{{ $item->orderable->name }}">
                                                         {{ $item->orderable->name }}
                                                     </a>
                                                     <div class="text-sm text-gray-500">
@@ -282,13 +301,15 @@
                                                     </div>
                                                 @endif
                                             @else
-                                                <span class="text-sm font-medium text-gray-900">Sản phẩm không có sẵn</span>
+                                                <span class="text-sm font-medium text-gray-900">Sản phẩm không có
+                                                    sẵn</span>
                                             @endif
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ number_format($item->price, 0, ',', '.') }} ₫</div>
+                                    <div class="text-sm text-gray-900">{{ number_format($item->price, 0, ',', '.') }} ₫
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $item->quantity }}</div>
@@ -320,9 +341,7 @@
 
         <!-- Nút thao tác -->
         <div class="flex flex-col sm:flex-row gap-4 justify-end">
-            @if (
-                ($order->status === 'pending' && $order->payment_method === 'cod') ||
-                    ($order->status === 'paid' && $order->payment_method !== 'cod'))
+            @if ($order->status === 'pending')
                 <form action="{{ route('admin.orders.ship', $order->id) }}" method="POST" class="inline">
                     @csrf
                     <button type="submit"
@@ -332,7 +351,7 @@
                 </form>
             @endif
 
-            @if ($order->status === 'pending' || $order->status === 'paid')
+            @if ($order->status === 'pending')
                 <form action="{{ route('admin.orders.cancel', $order->id) }}" method="POST" class="inline">
                     @csrf
                     <button type="submit"
@@ -360,7 +379,8 @@
             <img id="modalImage" src="" alt="Full size image" class="w-full h-auto max-h-[90vh] object-contain">
             <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
                 </svg>
             </button>
         </div>

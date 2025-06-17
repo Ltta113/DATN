@@ -88,9 +88,11 @@
                         <select name="payment_method" id="payment_method"
                             class="w-full bg-gray-100 py-3 px-4 rounded-lg outline-none">
                             <option value="">Tất cả phương thức</option>
-                            <option value="zalopay" {{ request('payment_method') == 'ZALOPAY' ? 'selected' : '' }}>ZALOPAY
+                            <option value="zalopay" {{ request('payment_method') == 'zalopay' ? 'selected' : '' }}>ZALOPAY
                             </option>
-                            <option value="wallet" {{ request('payment_method') == 'WALLET' ? 'selected' : '' }}>Ví điện tử
+                            <option value="wallet" {{ request('payment_method') == 'wallet' ? 'selected' : '' }}>Ví điện tử
+                            </option>
+                            <option value="cod" {{ request('payment_method') == 'cod' ? 'selected' : '' }}>Thanh toán tiền mặt
                             </option>
                         </select>
                     </div>
